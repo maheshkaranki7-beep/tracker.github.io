@@ -1,573 +1,433 @@
-// ==========================================
-// SANTHI MONTHLY EXPENSE CALCULATOR
-// ==========================================
+/* =========================================================
+   MONTHLY EXPENSE TRACKER
+   Advanced • Colorful • Mobile Friendly
+   ========================================================= */
 
-let expenses = JSON.parse(localStorage.getItem("santhiExpenses")) || [];
+const STORAGE_KEY = "monthlyExpenseTrackerData";
 
-// ---------- DOM ELEMENTS ----------
+let appData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+    budget: 10000,
+    expenses: []
+};
 
-const expenseForm = document.getElementById("expenseForm");
-const expenseList = document.getElementById("expenseList");
+let selectedMonth =
+    new Date().toISOString().slice(0, 7);
 
-const totalExpense = document.getElementById("totalExpense");
-const todayExpense = document.getElementById("todayExpense");
-const expenseCount = document.getElementById("expenseCount");
-
-const expenseName = document.getElementById("expenseName");
-const expenseAmount = document.getElementById("expenseAmount");
-const expenseCategory = document.getElementById("expenseCategory");
-const expenseDate = document.getElementById("expenseDate");
+let pieChart = null;
 
 
-// ---------- SET TODAY'S DATE ----------
+/* =========================================================
+   ELEMENT HELPERS
+   ========================================================= */
 
-if (expenseDate) {
-    expenseDate.value = new Date().toISOString().split("T")[0];
-}
-
-
-// ---------- SAVE DATA ----------
-
-function saveExpenses() {
-    localStorage.setItem("santhiExpenses", JSON.stringify(expenses));
-}
-
-
-// ---------- ADD EXPENSE ----------
-
-if (expenseForm) {
-
-    expenseForm.addEventListener("submit", function (event) {
-
-        event.preventDefault();
-
-        const name = expenseName.value.trim();
-        const amount = Number(expenseAmount.value);
-        const category = expenseCategory.value;
-        const date = expenseDate.value;
-
-        if (name === "" || amount <= 0 || date === "") {
-            alert("Please enter valid expense details.");
-            return;
-        }
-
-        const newExpense = {
-            id: Date.now(),
-            name: name,
-            amount: amount,
-            category: category,
-            date: date
-        };
-
-        expenses.push(newExpense);
-
-        saveExpenses();
-
-        expenseForm.reset();
-
-        expenseDate.value = new Date().toISOString().split("T")[0];
-
-        updateDashboard();
-
-        alert("Expense added successfully! 💰");
-    });
-}
-
-
-// ---------- DELETE EXPENSE ----------
-
-function deleteExpense(id) {
-
-    const confirmDelete = confirm("Delete this expense?");
-
-    if (!confirmDelete) {
-        return;
+function getElement(...ids) {
+    for (const id of ids) {
+        const element = document.getElementById(id);
+        if (element) return element;
     }
-
-    expenses = expenses.filter(function (expense) {
-        return expense.id !== id;
-    });
-
-    saveExpenses();
-
-    updateDashboard();
+    return null;
 }
 
 
-// ---------- FORMAT MONEY ----------
+/* =========================================================
+   SAVE DATA
+   ========================================================= */
 
-function formatMoney(amount) {
+function saveData() {
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(appData)
+    );
+}
+
+
+/* =========================================================
+   CURRENT MONTH
+   ========================================================= */
+
+function getCurrentMonth() {
+    return selectedMonth;
+}
+
+
+/* =========================================================
+   MONTH EXPENSES
+   ========================================================= */
+
+function getMonthExpenses() {
+
+    return appData.expenses.filter(expense => {
+
+        return expense.date &&
+            expense.date.slice(0, 7) === getCurrentMonth();
+
+    });
+}
+
+
+/* =========================================================
+   TOTAL EXPENSE
+   ========================================================= */
+
+function getTotalExpense() {
+
+    return getMonthExpenses().reduce(
+        (total, expense) =>
+            total + Number(expense.amount),
+        0
+    );
+}
+
+
+/* =========================================================
+   REMAINING MONEY
+   ========================================================= */
+
+function getRemaining() {
+
+    return Number(appData.budget) - getTotalExpense();
+
+}
+
+
+/* =========================================================
+   FORMAT MONEY
+   ========================================================= */
+
+function money(amount) {
 
     return "₹" + Number(amount).toLocaleString("en-IN", {
-        minimumFractionDigits: 2,
         maximumFractionDigits: 2
     });
+
 }
 
 
-// ---------- DISPLAY EXPENSES ----------
+/* =========================================================
+   FORMAT MONTH
+   ========================================================= */
 
-function displayExpenses() {
+function formatMonth(month) {
 
-    if (!expenseList) {
-        return;
-    }
+    const date = new Date(month + "-01");
 
-    expenseList.innerHTML = "";
-
-    if (expenses.length === 0) {
-
-        expenseList.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon">💸</div>
-                <h3>No expenses yet</h3>
-                <p>Add your first monthly expense above.</p>
-            </div>
-        `;
-
-        return;
-    }
-
-
-    // Latest expenses first
-    const sortedExpenses = [...expenses].sort(function (a, b) {
-
-        return new Date(b.date) - new Date(a.date);
-
+    return date.toLocaleDateString("en-IN", {
+        month: "long",
+        year: "numeric"
     });
 
-
-    sortedExpenses.forEach(function (expense) {
-
-        const item = document.createElement("div");
-
-        item.className = "expense-item";
-
-        item.innerHTML = `
-
-            <div class="expense-info">
-
-                <div class="expense-icon">
-                    ${getCategoryIcon(expense.category)}
-                </div>
-
-                <div>
-                    <h4>${escapeHTML(expense.name)}</h4>
-
-                    <p>
-                        ${escapeHTML(expense.category)}
-                        •
-                        ${formatDate(expense.date)}
-                    </p>
-                </div>
-
-            </div>
-
-
-            <div class="expense-right">
-
-                <strong>
-                    ${formatMoney(expense.amount)}
-                </strong>
-
-                <button
-                    class="delete-btn"
-                    onclick="deleteExpense(${expense.id})"
-                    title="Delete expense"
-                >
-                    🗑️
-                </button>
-
-            </div>
-
-        `;
-
-        expenseList.appendChild(item);
-
-    });
 }
 
 
-// ---------- CATEGORY ICON ----------
+/* =========================================================
+   UPDATE BUDGET
+   ========================================================= */
 
-function getCategoryIcon(category) {
+function updateBudget() {
 
-    const icons = {
+    const budgetInput = getElement(
+        "budget",
+        "monthlyBudget",
+        "budgetInput"
+    );
 
-        Food: "🍲",
+    if (!budgetInput) return;
 
-        Groceries: "🛒",
+    const newBudget =
+        Number(budgetInput.value);
 
-        Transport: "🚗",
+    if (isNaN(newBudget) || newBudget < 0) {
 
-        Electricity: "💡",
+        alert("Please enter a valid budget.");
 
-        Water: "💧",
+        return;
+    }
 
-        Rent: "🏠",
+    appData.budget = newBudget;
 
-        Shopping: "🛍️",
+    saveData();
 
-        Medical: "💊",
+    updateDashboard();
 
-        Education: "📚",
+}
 
-        Entertainment: "🎬",
 
-        Bills: "🧾",
+/* =========================================================
+   EDIT BUDGET
+   ========================================================= */
 
-        Other: "💰"
+function editBudget() {
+
+    const currentBudget =
+        Number(appData.budget);
+
+    const newBudget =
+        prompt(
+            "Enter your monthly budget:",
+            currentBudget
+        );
+
+    if (newBudget === null) return;
+
+    const value =
+        Number(newBudget);
+
+    if (isNaN(value) || value < 0) {
+
+        alert("Please enter a valid amount.");
+
+        return;
+    }
+
+    appData.budget = value;
+
+    saveData();
+
+    updateDashboard();
+
+}
+
+
+/* =========================================================
+   ADD EXPENSE
+   ========================================================= */
+
+function addExpense(event) {
+
+    if (event) {
+        event.preventDefault();
+    }
+
+    const nameInput = getElement(
+        "name",
+        "expenseName"
+    );
+
+    const amountInput = getElement(
+        "amount",
+        "expenseAmount"
+    );
+
+    const categoryInput = getElement(
+        "category",
+        "expenseCategory"
+    );
+
+    const dateInput = getElement(
+        "date",
+        "expenseDate"
+    );
+
+
+    if (!nameInput || !amountInput) {
+
+        alert(
+            "Expense form fields are missing."
+        );
+
+        return;
+    }
+
+
+    const name =
+        nameInput.value.trim();
+
+    const amount =
+        Number(amountInput.value);
+
+    const category =
+        categoryInput ?
+            categoryInput.value :
+            "Other";
+
+    const date =
+        dateInput && dateInput.value ?
+            dateInput.value :
+            new Date().toISOString().slice(0, 10);
+
+
+    if (!name) {
+
+        alert("Please enter an expense name.");
+
+        return;
+    }
+
+
+    if (!amount || amount <= 0) {
+
+        alert("Please enter a valid amount.");
+
+        return;
+    }
+
+
+    const expense = {
+
+        id: Date.now(),
+
+        name: name,
+
+        amount: amount,
+
+        category:
+            category || "Other",
+
+        date: date
 
     };
 
-    return icons[category] || "💰";
-}
 
+    appData.expenses.push(expense);
 
-// ---------- FORMAT DATE ----------
+    saveData();
 
-function formatDate(dateString) {
+    nameInput.value = "";
 
-    const date = new Date(dateString);
+    amountInput.value = "";
 
-    return date.toLocaleDateString("en-IN", {
-
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-
-    });
-}
-
-
-// ---------- SECURITY ----------
-
-function escapeHTML(text) {
-
-    const div = document.createElement("div");
-
-    div.textContent = text;
-
-    return div.innerHTML;
-}
-
-
-// ---------- CALCULATE TOTAL ----------
-
-function calculateTotal() {
-
-    return expenses.reduce(function (total, expense) {
-
-        return total + Number(expense.amount);
-
-    }, 0);
-}
-
-
-// ---------- TODAY'S EXPENSE ----------
-
-function calculateTodayExpense() {
-
-    const today = new Date().toISOString().split("T")[0];
-
-    return expenses.reduce(function (total, expense) {
-
-        if (expense.date === today) {
-
-            return total + Number(expense.amount);
-
-        }
-
-        return total;
-
-    }, 0);
-}
-
-
-// ---------- UPDATE DASHBOARD ----------
-
-function updateDashboard() {
-
-    const total = calculateTotal();
-
-    const today = calculateTodayExpense();
-
-    if (totalExpense) {
-        totalExpense.textContent = formatMoney(total);
-    }
-
-    if (todayExpense) {
-        todayExpense.textContent = formatMoney(today);
-    }
-
-    if (expenseCount) {
-        expenseCount.textContent = expenses.length;
-    }
-
-    displayExpenses();
-
-    updateCategorySummary();
-
-    updateChart();
-}
-
-
-// ---------- CATEGORY SUMMARY ----------
-
-function updateCategorySummary() {
-
-    const categoryContainer =
-        document.getElementById("categorySummary");
-
-    if (!categoryContainer) {
-        return;
-    }
-
-    categoryContainer.innerHTML = "";
-
-    const categoryTotals = {};
-
-    expenses.forEach(function (expense) {
-
-        if (!categoryTotals[expense.category]) {
-
-            categoryTotals[expense.category] = 0;
-
-        }
-
-        categoryTotals[expense.category] +=
-            Number(expense.amount);
-
-    });
-
-
-    const categories = Object.keys(categoryTotals);
-
-    if (categories.length === 0) {
-
-        categoryContainer.innerHTML = `
-            <p class="no-data">
-                No category data available.
-            </p>
-        `;
-
-        return;
-    }
-
-
-    categories
-        .sort(function (a, b) {
-
-            return categoryTotals[b] - categoryTotals[a];
-
-        })
-        .forEach(function (category) {
-
-            const row = document.createElement("div");
-
-            row.className = "category-row";
-
-            row.innerHTML = `
-
-                <div class="category-name">
-
-                    <span class="category-icon">
-                        ${getCategoryIcon(category)}
-                    </span>
-
-                    <span>
-                        ${escapeHTML(category)}
-                    </span>
-
-                </div>
-
-                <strong>
-                    ${formatMoney(categoryTotals[category])}
-                </strong>
-
-            `;
-
-            categoryContainer.appendChild(row);
-
-        });
-}
-
-
-// ---------- CHART ----------
-
-function updateChart() {
-
-    const canvas = document.getElementById("expenseChart");
-
-    if (!canvas) {
-        return;
-    }
-
-    const ctx = canvas.getContext("2d");
-
-    const categoryTotals = {};
-
-    expenses.forEach(function (expense) {
-
-        if (!categoryTotals[expense.category]) {
-
-            categoryTotals[expense.category] = 0;
-
-        }
-
-        categoryTotals[expense.category] +=
-            Number(expense.amount);
-
-    });
-
-
-    const labels = Object.keys(categoryTotals);
-
-    const values = Object.values(categoryTotals);
-
-
-    // If Chart.js is available
-    if (typeof Chart !== "undefined") {
-
-        if (window.expenseChartInstance) {
-
-            window.expenseChartInstance.destroy();
-
-        }
-
-        window.expenseChartInstance = new Chart(ctx, {
-
-            type: "doughnut",
-
-            data: {
-
-                labels: labels,
-
-                datasets: [{
-
-                    data: values,
-
-                    borderWidth: 0
-
-                }]
-
-            },
-
-            options: {
-
-                responsive: true,
-
-                maintainAspectRatio: false,
-
-                plugins: {
-
-                    legend: {
-
-                        position: "bottom"
-
-                    }
-
-                }
-
-            }
-
-        });
-
-    }
-
-}
-
-
-// ---------- CLEAR ALL EXPENSES ----------
-
-function clearAllExpenses() {
-
-    if (expenses.length === 0) {
-
-        alert("There are no expenses to delete.");
-
-        return;
-
-    }
-
-    const confirmation =
-        confirm("Are you sure you want to delete ALL expenses?");
-
-    if (!confirmation) {
-        return;
-    }
-
-    expenses = [];
-
-    saveExpenses();
 
     updateDashboard();
 
-    alert("All expenses deleted.");
+
+    showMessage(
+        "Expense added successfully! 💰"
+    );
+
 }
 
 
-// ---------- SEARCH EXPENSES ----------
+/* =========================================================
+   DELETE EXPENSE
+   ========================================================= */
 
-function searchExpenses() {
+function deleteExpense(id) {
 
-    const searchBox =
-        document.getElementById("searchExpense");
-
-    if (!searchBox) {
-        return;
-    }
-
-    const searchText =
-        searchBox.value.toLowerCase().trim();
-
-    const filteredExpenses = expenses.filter(function (expense) {
-
-        return (
-
-            expense.name.toLowerCase().includes(searchText) ||
-
-            expense.category.toLowerCase().includes(searchText)
-
+    const confirmDelete =
+        confirm(
+            "Are you sure you want to delete this expense?"
         );
 
-    });
+    if (!confirmDelete) return;
 
 
-    displayFilteredExpenses(filteredExpenses);
+    appData.expenses =
+        appData.expenses.filter(
+            expense =>
+                expense.id !== id
+        );
+
+
+    saveData();
+
+    updateDashboard();
+
 }
 
 
-// ---------- DISPLAY SEARCH RESULTS ----------
+/* =========================================================
+   CLEAR CURRENT MONTH
+   ========================================================= */
 
-function displayFilteredExpenses(filteredExpenses) {
+function clearCurrentMonth() {
 
-    if (!expenseList) {
+    const monthExpenses =
+        getMonthExpenses();
+
+    if (monthExpenses.length === 0) {
+
+        alert(
+            "There are no expenses for this month."
+        );
+
         return;
     }
 
-    expenseList.innerHTML = "";
+
+    const confirmed =
+        confirm(
+            `Delete all expenses for ${formatMonth(selectedMonth)}?`
+        );
 
 
-    if (filteredExpenses.length === 0) {
+    if (!confirmed) return;
 
-        expenseList.innerHTML = `
+
+    appData.expenses =
+        appData.expenses.filter(
+            expense =>
+                expense.date.slice(0, 7) !==
+                selectedMonth
+        );
+
+
+    saveData();
+
+    updateDashboard();
+
+}
+
+
+/* =========================================================
+   DISPLAY EXPENSES
+   ========================================================= */
+
+function displayExpenses() {
+
+    const list =
+        getElement(
+            "expenseList",
+            "expensesList",
+            "expenseHistory"
+        );
+
+    if (!list) return;
+
+
+    list.innerHTML = "";
+
+
+    const expenses =
+        [...getMonthExpenses()].sort(
+            (a, b) =>
+                new Date(b.date) -
+                new Date(a.date)
+        );
+
+
+    if (expenses.length === 0) {
+
+        list.innerHTML = `
+
             <div class="empty-state">
-                <div class="empty-icon">🔍</div>
-                <h3>No expenses found</h3>
-                <p>Try another search.</p>
+
+                <div class="empty-icon">
+                    💸
+                </div>
+
+                <h3>No expenses yet</h3>
+
+                <p>
+                    Add an expense to see it here.
+                </p>
+
             </div>
+
         `;
 
         return;
     }
 
 
-    filteredExpenses.forEach(function (expense) {
+    expenses.forEach(expense => {
 
-        const item = document.createElement("div");
+        const item =
+            document.createElement("div");
 
-        item.className = "expense-item";
+
+        item.className =
+            "expense-item";
+
 
         item.innerHTML = `
 
@@ -597,7 +457,763 @@ function displayFilteredExpenses(filteredExpenses) {
             <div class="expense-right">
 
                 <strong>
-                    ${formatMoney(expense.amount)}
+                    ${money(expense.amount)}
+                </strong>
+
+                <button
+                    class="delete-btn"
+                    onclick="deleteExpense(${expense.id})"
+                    aria-label="Delete expense"
+                >
+                    🗑️
+                </button>
+
+            </div>
+
+        `;
+
+
+        list.appendChild(item);
+
+    });
+
+}
+
+
+/* =========================================================
+   CATEGORY ICONS
+   ========================================================= */
+
+function getCategoryIcon(category) {
+
+    const icons = {
+
+        Food: "🍲",
+
+        Groceries: "🛒",
+
+        Transport: "🚗",
+
+        Electricity: "💡",
+
+        Water: "💧",
+
+        Rent: "🏠",
+
+        Shopping: "🛍️",
+
+        Medical: "💊",
+
+        Education: "📚",
+
+        Entertainment: "🎬",
+
+        Bills: "🧾",
+
+        Fuel: "⛽",
+
+        Travel: "✈️",
+
+        Other: "💰"
+
+    };
+
+
+    return icons[category] || "💰";
+
+}
+
+
+/* =========================================================
+   FORMAT DATE
+   ========================================================= */
+
+function formatDate(dateString) {
+
+    const date =
+        new Date(dateString);
+
+
+    return date.toLocaleDateString(
+        "en-IN",
+        {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        }
+    );
+
+}
+
+
+/* =========================================================
+   CATEGORY TOTALS
+   ========================================================= */
+
+function getCategoryTotals() {
+
+    const totals = {};
+
+    getMonthExpenses().forEach(expense => {
+
+        const category =
+            expense.category || "Other";
+
+
+        if (!totals[category]) {
+
+            totals[category] = 0;
+
+        }
+
+
+        totals[category] +=
+            Number(expense.amount);
+
+    });
+
+
+    return totals;
+
+}
+
+
+/* =========================================================
+   CATEGORY SUMMARY
+   ========================================================= */
+
+function displayCategorySummary() {
+
+    const container =
+        getElement(
+            "categorySummary",
+            "categoryList"
+        );
+
+    if (!container) return;
+
+
+    container.innerHTML = "";
+
+
+    const totals =
+        getCategoryTotals();
+
+
+    const categories =
+        Object.keys(totals);
+
+
+    if (categories.length === 0) {
+
+        container.innerHTML = `
+            <p class="no-data">
+                No category data yet.
+            </p>
+        `;
+
+        return;
+    }
+
+
+    categories
+        .sort(
+            (a, b) =>
+                totals[b] -
+                totals[a]
+        )
+        .forEach(category => {
+
+            const row =
+                document.createElement("div");
+
+
+            row.className =
+                "category-row";
+
+
+            row.innerHTML = `
+
+                <div class="category-name">
+
+                    <span class="category-icon">
+                        ${getCategoryIcon(category)}
+                    </span>
+
+                    <span>
+                        ${escapeHTML(category)}
+                    </span>
+
+                </div>
+
+                <strong>
+                    ${money(totals[category])}
+                </strong>
+
+            `;
+
+
+            container.appendChild(row);
+
+        });
+
+}
+
+
+/* =========================================================
+   PIE CHART
+   ========================================================= */
+
+function updateChart() {
+
+    const canvas =
+        getElement(
+            "expenseChart",
+            "pieChart",
+            "categoryChart"
+        );
+
+    if (!canvas) return;
+
+
+    const totals =
+        getCategoryTotals();
+
+
+    const labels =
+        Object.keys(totals);
+
+
+    const values =
+        Object.values(totals);
+
+
+    if (
+        typeof Chart === "undefined"
+    ) {
+
+        console.log(
+            "Chart.js is not loaded."
+        );
+
+        return;
+    }
+
+
+    if (pieChart) {
+
+        pieChart.destroy();
+
+    }
+
+
+    const ctx =
+        canvas.getContext("2d");
+
+
+    pieChart =
+        new Chart(ctx, {
+
+            type: "doughnut",
+
+            data: {
+
+                labels: labels,
+
+                datasets: [{
+
+                    data: values,
+
+                    borderWidth: 3,
+
+                    borderColor: "#ffffff",
+
+                    backgroundColor: [
+
+                        "#7c3aed",
+
+                        "#ec4899",
+
+                        "#2563eb",
+
+                        "#06b6d4",
+
+                        "#10b981",
+
+                        "#f97316",
+
+                        "#eab308",
+
+                        "#ef4444",
+
+                        "#8b5cf6",
+
+                        "#14b8a6"
+
+                    ]
+
+                }]
+
+            },
+
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                cutout: "62%",
+
+
+                plugins: {
+
+                    legend: {
+
+                        position: "bottom",
+
+                        labels: {
+
+                            padding: 15,
+
+                            usePointStyle: true,
+
+                            font: {
+
+                                size: 13
+
+                            }
+
+                        }
+
+                    }
+
+                },
+
+
+                animation: {
+
+                    animateRotate: true,
+
+                    animateScale: true,
+
+                    duration: 1000
+
+                }
+
+            }
+
+        });
+
+}
+
+
+/* =========================================================
+   UPDATE DASHBOARD
+   ========================================================= */
+
+function updateDashboard() {
+
+    const total =
+        getTotalExpense();
+
+
+    const budget =
+        Number(appData.budget);
+
+
+    const remaining =
+        budget - total;
+
+
+    const totalElement =
+        getElement(
+            "totalExpense",
+            "totalExpenses"
+        );
+
+
+    const budgetElement =
+        getElement(
+            "budgetDisplay",
+            "monthlyBudgetDisplay",
+            "budgetAmount"
+        );
+
+
+    const remainingElement =
+        getElement(
+            "remaining",
+            "remainingAmount"
+        );
+
+
+    const countElement =
+        getElement(
+            "expenseCount",
+            "totalCount"
+        );
+
+
+    if (totalElement) {
+
+        totalElement.textContent =
+            money(total);
+
+    }
+
+
+    if (budgetElement) {
+
+        budgetElement.textContent =
+            money(budget);
+
+    }
+
+
+    if (remainingElement) {
+
+        remainingElement.textContent =
+            money(remaining);
+
+        if (remaining < 0) {
+
+            remainingElement.classList.add(
+                "negative"
+            );
+
+        } else {
+
+            remainingElement.classList.remove(
+                "negative"
+            );
+
+        }
+
+    }
+
+
+    if (countElement) {
+
+        countElement.textContent =
+            getMonthExpenses().length;
+
+    }
+
+
+    updateBudgetInput();
+
+    updateMonthDisplay();
+
+    displayExpenses();
+
+    displayCategorySummary();
+
+    updateChart();
+
+}
+
+
+/* =========================================================
+   UPDATE BUDGET INPUT
+   ========================================================= */
+
+function updateBudgetInput() {
+
+    const input =
+        getElement(
+            "budget",
+            "monthlyBudget",
+            "budgetInput"
+        );
+
+
+    if (input) {
+
+        input.value =
+            appData.budget;
+
+    }
+
+}
+
+
+/* =========================================================
+   MONTH SELECTOR
+   ========================================================= */
+
+function updateMonthDisplay() {
+
+    const monthInput =
+        getElement(
+            "month",
+            "monthPicker",
+            "selectedMonth"
+        );
+
+
+    if (monthInput) {
+
+        monthInput.value =
+            selectedMonth;
+
+    }
+
+
+    const monthText =
+        getElement(
+            "monthTitle",
+            "currentMonth",
+            "selectedMonthText"
+        );
+
+
+    if (monthText) {
+
+        monthText.textContent =
+            formatMonth(selectedMonth);
+
+    }
+
+}
+
+
+/* =========================================================
+   CHANGE MONTH
+   ========================================================= */
+
+function changeMonth(value) {
+
+    if (!value) return;
+
+    selectedMonth = value;
+
+    updateDashboard();
+
+}
+
+
+/* =========================================================
+   EXPORT CSV
+   ========================================================= */
+
+function exportExpenses() {
+
+    const expenses =
+        getMonthExpenses();
+
+
+    if (expenses.length === 0) {
+
+        alert(
+            "No expenses to export for this month."
+        );
+
+        return;
+    }
+
+
+    let csv =
+        "Expense Name,Amount,Category,Date\n";
+
+
+    expenses.forEach(expense => {
+
+        csv +=
+            `"${escapeCSV(expense.name)}",` +
+            `"${expense.amount}",` +
+            `"${escapeCSV(expense.category)}",` +
+            `"${expense.date}"\n`;
+
+    });
+
+
+    const blob =
+        new Blob(
+            [csv],
+            {
+                type:
+                    "text/csv;charset=utf-8;"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(blob);
+
+
+    const link =
+        document.createElement("a");
+
+
+    link.href = url;
+
+
+    link.download =
+        `Expenses-${selectedMonth}.csv`;
+
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+
+    URL.revokeObjectURL(url);
+
+}
+
+
+/* =========================================================
+   CSV ESCAPE
+   ========================================================= */
+
+function escapeCSV(value) {
+
+    return String(value)
+        .replace(/"/g, '""');
+
+}
+
+
+/* =========================================================
+   HTML ESCAPE
+   ========================================================= */
+
+function escapeHTML(value) {
+
+    const div =
+        document.createElement("div");
+
+
+    div.textContent =
+        String(value);
+
+
+    return div.innerHTML;
+
+}
+
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+function searchExpenses() {
+
+    const searchInput =
+        getElement(
+            "search",
+            "searchExpense"
+        );
+
+
+    const list =
+        getElement(
+            "expenseList",
+            "expensesList",
+            "expenseHistory"
+        );
+
+
+    if (!searchInput || !list) return;
+
+
+    const query =
+        searchInput.value
+            .toLowerCase()
+            .trim();
+
+
+    const results =
+        getMonthExpenses().filter(expense => {
+
+            return (
+
+                expense.name
+                    .toLowerCase()
+                    .includes(query)
+
+                ||
+
+                expense.category
+                    .toLowerCase()
+                    .includes(query)
+
+            );
+
+        });
+
+
+    list.innerHTML = "";
+
+
+    if (results.length === 0) {
+
+        list.innerHTML = `
+
+            <div class="empty-state">
+
+                <div class="empty-icon">
+                    🔍
+                </div>
+
+                <h3>
+                    No expenses found
+                </h3>
+
+                <p>
+                    Try another search.
+                </p>
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+
+    results.forEach(expense => {
+
+        const item =
+            document.createElement("div");
+
+
+        item.className =
+            "expense-item";
+
+
+        item.innerHTML = `
+
+            <div class="expense-info">
+
+                <div class="expense-icon">
+                    ${getCategoryIcon(expense.category)}
+                </div>
+
+                <div>
+
+                    <h4>
+                        ${escapeHTML(expense.name)}
+                    </h4>
+
+                    <p>
+                        ${escapeHTML(expense.category)}
+                        •
+                        ${formatDate(expense.date)}
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="expense-right">
+
+                <strong>
+                    ${money(expense.amount)}
                 </strong>
 
                 <button
@@ -611,104 +1227,302 @@ function displayFilteredExpenses(filteredExpenses) {
 
         `;
 
-        expenseList.appendChild(item);
+
+        list.appendChild(item);
 
     });
+
 }
 
 
-// ---------- DARK MODE ----------
+/* =========================================================
+   DARK MODE
+   ========================================================= */
 
 function toggleDarkMode() {
 
-    document.body.classList.toggle("dark-mode");
+    document.body.classList.toggle(
+        "dark-mode"
+    );
 
-    const darkMode =
-        document.body.classList.contains("dark-mode");
+
+    const enabled =
+        document.body.classList.contains(
+            "dark-mode"
+        );
+
 
     localStorage.setItem(
-        "santhiDarkMode",
-        darkMode
+        "expenseDarkMode",
+        enabled
     );
 
 }
 
 
-// ---------- LOAD DARK MODE ----------
+/* =========================================================
+   LOAD DARK MODE
+   ========================================================= */
 
 function loadDarkMode() {
 
-    const darkMode =
-        localStorage.getItem("santhiDarkMode");
+    const enabled =
+        localStorage.getItem(
+            "expenseDarkMode"
+        );
 
-    if (darkMode === "true") {
 
-        document.body.classList.add("dark-mode");
+    if (enabled === "true") {
+
+        document.body.classList.add(
+            "dark-mode"
+        );
 
     }
 
 }
 
 
-// ---------- EXPORT CSV ----------
+/* =========================================================
+   SMALL MESSAGE
+   ========================================================= */
 
-function exportExpenses() {
+function showMessage(message) {
 
-    if (expenses.length === 0) {
+    let toast =
+        document.getElementById(
+            "toastMessage"
+        );
 
-        alert("No expenses available to export.");
 
-        return;
+    if (!toast) {
+
+        toast =
+            document.createElement("div");
+
+
+        toast.id =
+            "toastMessage";
+
+
+        toast.style.position =
+            "fixed";
+
+
+        toast.style.bottom =
+            "25px";
+
+
+        toast.style.left =
+            "50%";
+
+
+        toast.style.transform =
+            "translateX(-50%)";
+
+
+        toast.style.padding =
+            "14px 22px";
+
+
+        toast.style.borderRadius =
+            "15px";
+
+
+        toast.style.background =
+            "linear-gradient(135deg,#7c3aed,#ec4899)";
+
+
+        toast.style.color =
+            "white";
+
+
+        toast.style.fontWeight =
+            "700";
+
+
+        toast.style.zIndex =
+            "9999";
+
+
+        toast.style.boxShadow =
+            "0 15px 40px rgba(0,0,0,.25)";
+
+
+        document.body.appendChild(toast);
 
     }
 
 
-    let csv =
-        "Expense Name,Amount,Category,Date\n";
+    toast.textContent =
+        message;
 
 
-    expenses.forEach(function (expense) {
-
-        csv +=
-            `"${expense.name}",` +
-            `"${expense.amount}",` +
-            `"${expense.category}",` +
-            `"${expense.date}"\n`;
-
-    });
+    toast.style.display =
+        "block";
 
 
-    const blob = new Blob(
-        [csv],
-        { type: "text/csv;charset=utf-8;" }
-    );
+    setTimeout(() => {
 
+        toast.style.display =
+            "none";
 
-    const url =
-        URL.createObjectURL(blob);
-
-
-    const link =
-        document.createElement("a");
-
-    link.href = url;
-
-    link.download =
-        "Santhi-Monthly-Expenses.csv";
-
-    link.click();
-
-    URL.revokeObjectURL(url);
+    }, 2500);
 
 }
 
 
-// ---------- INITIAL LOAD ----------
+/* =========================================================
+   EVENT LISTENERS
+   ========================================================= */
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-    loadDarkMode();
+        loadDarkMode();
 
-    updateDashboard();
 
-});
+        const form =
+            getElement(
+                "expenseForm"
+            );
+
+
+        if (form) {
+
+            form.addEventListener(
+                "submit",
+                addExpense
+            );
+
+        }
+
+
+        const monthInput =
+            getElement(
+                "month",
+                "monthPicker",
+                "selectedMonth"
+            );
+
+
+        if (monthInput) {
+
+            monthInput.addEventListener(
+                "change",
+                function () {
+
+                    changeMonth(
+                        this.value
+                    );
+
+                }
+            );
+
+        }
+
+
+        const searchInput =
+            getElement(
+                "search",
+                "searchExpense"
+            );
+
+
+        if (searchInput) {
+
+            searchInput.addEventListener(
+                "input",
+                searchExpenses
+            );
+
+        }
+
+
+        const budgetButton =
+            getElement(
+                "editBudget",
+                "budgetEdit",
+                "changeBudget"
+            );
+
+
+        if (budgetButton) {
+
+            budgetButton.addEventListener(
+                "click",
+                editBudget
+            );
+
+        }
+
+
+        const exportButton =
+            getElement(
+                "exportBtn",
+                "exportExpenses"
+            );
+
+
+        if (exportButton) {
+
+            exportButton.addEventListener(
+                "click",
+                exportExpenses
+            );
+
+        }
+
+
+        const clearButton =
+            getElement(
+                "clearBtn",
+                "clearExpenses"
+            );
+
+
+        if (clearButton) {
+
+            clearButton.addEventListener(
+                "click",
+                clearCurrentMonth
+            );
+
+        }
+
+
+        updateDashboard();
+
+    }
+);
+
+
+/* =========================================================
+   GLOBAL FUNCTIONS
+   ========================================================= */
+
+window.deleteExpense =
+    deleteExpense;
+
+window.editBudget =
+    editBudget;
+
+window.updateBudget =
+    updateBudget;
+
+window.changeMonth =
+    changeMonth;
+
+window.toggleDarkMode =
+    toggleDarkMode;
+
+window.exportExpenses =
+    exportExpenses;
+
+window.clearCurrentMonth =
+    clearCurrentMonth;
+
+window.searchExpenses =
+    searchExpenses;
+
