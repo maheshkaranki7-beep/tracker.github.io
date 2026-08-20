@@ -4,512 +4,554 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Monthly Expense Calculator</title>
+    <title>Monthly Expense Tracker</title>
 
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-        }
+    <link rel="stylesheet" href="style.css">
 
-        body {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            padding: 20px;
-            color: #222;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: auto;
-        }
-
-        header {
-            background: rgba(255,255,255,0.95);
-            padding: 25px;
-            border-radius: 25px;
-            text-align: center;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        }
-
-        header h1 {
-            color: #5b4bc4;
-            font-size: 32px;
-            margin-bottom: 8px;
-        }
-
-        header p {
-            color: #666;
-        }
-
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 18px;
-            margin-bottom: 20px;
-        }
-
-        .card {
-            background: rgba(255,255,255,0.95);
-            padding: 25px;
-            border-radius: 22px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-        }
-
-        .card h3 {
-            color: #666;
-            font-size: 15px;
-            margin-bottom: 10px;
-        }
-
-        .amount {
-            font-size: 28px;
-            font-weight: bold;
-            color: #5b4bc4;
-        }
-
-        .main {
-            display: grid;
-            grid-template-columns: 1fr 1.4fr;
-            gap: 20px;
-        }
-
-        .box {
-            background: rgba(255,255,255,0.96);
-            padding: 25px;
-            border-radius: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-        }
-
-        .box h2 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 14px;
-            margin-bottom: 14px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            outline: none;
-            font-size: 15px;
-        }
-
-        input:focus,
-        select:focus {
-            border-color: #667eea;
-        }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 18px rgba(0,0,0,0.2);
-        }
-
-        .expense-list {
-            max-height: 430px;
-            overflow-y: auto;
-        }
-
-        .expense {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background: #f7f7fb;
-            border-radius: 15px;
-            margin-bottom: 12px;
-        }
-
-        .expense-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .expense-name {
-            font-weight: bold;
-        }
-
-        .expense-category {
-            font-size: 13px;
-            color: #777;
-        }
-
-        .expense-price {
-            font-weight: bold;
-            color: #e74c3c;
-        }
-
-        .delete-btn {
-            width: auto;
-            padding: 7px 10px;
-            margin-left: 10px;
-            background: #ff5c5c;
-            font-size: 12px;
-        }
-
-        .empty {
-            text-align: center;
-            padding: 40px 10px;
-            color: #888;
-        }
-
-        .footer {
-            text-align: center;
-            color: white;
-            margin-top: 20px;
-            font-size: 13px;
-        }
-
-        @media (max-width: 800px) {
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
-
-            .main {
-                grid-template-columns: 1fr;
-            }
-
-            header h1 {
-                font-size: 26px;
-            }
-        }
-    </style>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
-<div class="container">
+    <div class="app-container">
 
-    <header>
-        <h1>💰 Monthly Expense Calculator</h1>
-        <p>Simple & smart expense tracking</p>
-    </header>
+        <!-- ================= HEADER ================= -->
 
-    <div class="dashboard">
+        <header class="hero">
 
-        <div class="card">
-            <h3>💵 Monthly Budget</h3>
-            <div class="amount" id="budgetDisplay">₹0</div>
-        </div>
+            <div class="hero-content">
 
-        <div class="card">
-            <h3>💸 Total Expenses</h3>
-            <div class="amount" id="totalDisplay">₹0</div>
-        </div>
+                <div class="hero-icon">
+                    💰
+                </div>
 
-        <div class="card">
-            <h3>💚 Remaining</h3>
-            <div class="amount" id="remainingDisplay">₹0</div>
-        </div>
+                <div>
+                    <h1>Monthly Expense Tracker</h1>
+                    <p>Simple • Smart • Beautiful</p>
+                </div>
 
-    </div>
+            </div>
 
-    <div class="main">
-
-        <!-- Add Expense -->
-        <div class="box">
-
-            <h2>➕ Add Expense</h2>
-
-            <input
-                type="number"
-                id="budget"
-                placeholder="Enter monthly budget"
-            >
-
-            <input
-                type="text"
-                id="expenseName"
-                placeholder="Expense name"
-            >
-
-            <input
-                type="number"
-                id="expenseAmount"
-                placeholder="Amount ₹"
-            >
-
-            <select id="category">
-                <option value="">Select category</option>
-                <option value="🍚 Food">🍚 Food</option>
-                <option value="🛒 Groceries">🛒 Groceries</option>
-                <option value="🏠 House">🏠 House</option>
-                <option value="💡 Bills">💡 Bills</option>
-                <option value="🚗 Transport">🚗 Transport</option>
-                <option value="💊 Medical">💊 Medical</option>
-                <option value="🎓 Education">🎓 Education</option>
-                <option value="🛍️ Shopping">🛍️ Shopping</option>
-                <option value="📱 Mobile">📱 Mobile</option>
-                <option value="📦 Other">📦 Other</option>
-            </select>
-
-            <input
-                type="date"
-                id="expenseDate"
-            >
-
-            <button onclick="addExpense()">
-                Add Expense
+            <button
+                class="dark-mode-btn"
+                onclick="toggleDarkMode()"
+                title="Toggle dark mode">
+                🌙
             </button>
 
-        </div>
+        </header>
 
-        <!-- Expense History -->
-        <div class="box">
 
-            <h2>📋 Expense History</h2>
+        <!-- ================= MONTH & BUDGET ================= -->
 
-            <div id="expenseList" class="expense-list">
-                <div class="empty">
-                    No expenses added yet.
+        <section class="settings-card">
+
+            <div class="section-title">
+                <span>📅</span>
+                <div>
+                    <h2>Monthly Budget</h2>
+                    <p>Choose your month and set your budget</p>
                 </div>
             </div>
 
-        </div>
 
-    </div>
+            <div class="budget-grid">
 
-    <div class="footer">
-        Made with ❤️ for easy monthly expense management
-    </div>
+                <div class="input-box">
 
-</div>
+                    <label for="monthSelect">
+                        Month
+                    </label>
 
-<script>
+                    <input
+                        type="month"
+                        id="monthSelect">
 
-    let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
-
-    let savedBudget =
-        Number(localStorage.getItem("budget")) || 0;
-
-    document.getElementById("budgetDisplay").innerText =
-        "₹" + savedBudget.toLocaleString("en-IN");
-
-    function updateDashboard() {
-
-        let total = expenses.reduce(
-            (sum, expense) => sum + expense.amount,
-            0
-        );
-
-        let remaining = savedBudget - total;
-
-        document.getElementById("budgetDisplay").innerText =
-            "₹" + savedBudget.toLocaleString("en-IN");
-
-        document.getElementById("totalDisplay").innerText =
-            "₹" + total.toLocaleString("en-IN");
-
-        document.getElementById("remainingDisplay").innerText =
-            "₹" + remaining.toLocaleString("en-IN");
-    }
-
-
-    function addExpense() {
-
-        let budgetInput =
-            document.getElementById("budget").value;
-
-        let name =
-            document.getElementById("expenseName").value.trim();
-
-        let amount =
-            Number(document.getElementById("expenseAmount").value);
-
-        let category =
-            document.getElementById("category").value;
-
-        let date =
-            document.getElementById("expenseDate").value;
-
-
-        if (budgetInput !== "") {
-
-            savedBudget = Number(budgetInput);
-
-            localStorage.setItem(
-                "budget",
-                savedBudget
-            );
-
-        }
-
-
-        if (
-            name === "" ||
-            amount <= 0 ||
-            category === "" ||
-            date === ""
-        ) {
-
-            alert("Please fill all expense details.");
-
-            return;
-        }
-
-
-        let expense = {
-
-            id: Date.now(),
-
-            name: name,
-
-            amount: amount,
-
-            category: category,
-
-            date: date
-
-        };
-
-
-        expenses.push(expense);
-
-
-        localStorage.setItem(
-            "expenses",
-            JSON.stringify(expenses)
-        );
-
-
-        document.getElementById("expenseName").value = "";
-
-        document.getElementById("expenseAmount").value = "";
-
-        document.getElementById("category").value = "";
-
-        document.getElementById("expenseDate").value = "";
-
-
-        displayExpenses();
-
-        updateDashboard();
-
-    }
-
-
-    function displayExpenses() {
-
-        let list =
-            document.getElementById("expenseList");
-
-
-        if (expenses.length === 0) {
-
-            list.innerHTML = `
-                <div class="empty">
-                    No expenses added yet.
                 </div>
-            `;
-
-            return;
-        }
 
 
-        list.innerHTML = "";
+                <div class="input-box">
+
+                    <label for="monthlyBudget">
+                        Budget
+                    </label>
+
+                    <div class="amount-input">
+
+                        <span>₹</span>
+
+                        <input
+                            type="number"
+                            id="monthlyBudget"
+                            placeholder="Enter budget"
+                            min="0"
+                            step="100">
+
+                    </div>
+
+                </div>
 
 
-        expenses
-            .slice()
-            .reverse()
-            .forEach(expense => {
+                <button
+                    class="save-budget-btn"
+                    onclick="saveBudget()">
 
-                let div =
-                    document.createElement("div");
+                    💾 Save Budget
 
-                div.className = "expense";
+                </button>
+
+            </div>
+
+        </section>
 
 
-                div.innerHTML = `
+        <!-- ================= SUMMARY ================= -->
 
-                    <div class="expense-info">
+        <section class="summary-grid">
 
-                        <div class="expense-name">
-                            ${expense.name}
-                        </div>
 
-                        <div class="expense-category">
-                            ${expense.category}
-                            • ${expense.date}
+            <!-- Budget -->
+
+            <div class="summary-card budget-card">
+
+                <div class="summary-icon">
+                    🎯
+                </div>
+
+                <div>
+
+                    <p>Monthly Budget</p>
+
+                    <h3 id="totalBudget">
+                        ₹0
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <!-- Expenses -->
+
+            <div class="summary-card expense-card">
+
+                <div class="summary-icon">
+                    💸
+                </div>
+
+                <div>
+
+                    <p>Total Expenses</p>
+
+                    <h3 id="totalExpense">
+                        ₹0
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <!-- Remaining -->
+
+            <div class="summary-card remaining-card">
+
+                <div class="summary-icon">
+                    💚
+                </div>
+
+                <div>
+
+                    <p>Remaining</p>
+
+                    <h3 id="remainingAmount">
+                        ₹0
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <!-- Count -->
+
+            <div class="summary-card count-card">
+
+                <div class="summary-icon">
+                    🧾
+                </div>
+
+                <div>
+
+                    <p>Expenses</p>
+
+                    <h3 id="expenseCount">
+                        0
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= PROGRESS ================= -->
+
+        <section class="progress-card">
+
+            <div class="progress-header">
+
+                <div>
+
+                    <h2>Budget Usage</h2>
+
+                    <p id="budgetStatus">
+                        Start adding expenses
+                    </p>
+
+                </div>
+
+                <strong id="budgetPercentage">
+                    0%
+                </strong>
+
+            </div>
+
+
+            <div class="progress-bar">
+
+                <div
+                    id="budgetProgress"
+                    class="progress-fill">
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= ADD EXPENSE ================= -->
+
+        <section class="expense-form-card">
+
+            <div class="section-title">
+
+                <span>➕</span>
+
+                <div>
+
+                    <h2>Add Expense</h2>
+
+                    <p>
+                        Enter only what you need
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <form id="expenseForm">
+
+                <div class="expense-form-grid">
+
+
+                    <!-- Expense Name -->
+
+                    <div class="input-box">
+
+                        <label for="expenseName">
+                            Expense
+                        </label>
+
+                        <input
+                            type="text"
+                            id="expenseName"
+                            placeholder="Example: Groceries"
+                            required>
+
+                    </div>
+
+
+                    <!-- Amount -->
+
+                    <div class="input-box">
+
+                        <label for="expenseAmount">
+                            Amount
+                        </label>
+
+                        <div class="amount-input">
+
+                            <span>₹</span>
+
+                            <input
+                                type="number"
+                                id="expenseAmount"
+                                placeholder="0"
+                                min="1"
+                                required>
+
                         </div>
 
                     </div>
+
+
+                    <!-- Category -->
+
+                    <div class="input-box">
+
+                        <label for="expenseCategory">
+                            Category
+                        </label>
+
+                        <select
+                            id="expenseCategory"
+                            required>
+
+                            <option value="">
+                                Select category
+                            </option>
+
+                            <option value="Food">
+                                🍲 Food
+                            </option>
+
+                            <option value="Groceries">
+                                🛒 Groceries
+                            </option>
+
+                            <option value="Transport">
+                                🚗 Transport
+                            </option>
+
+                            <option value="Electricity">
+                                💡 Electricity
+                            </option>
+
+                            <option value="Water">
+                                💧 Water
+                            </option>
+
+                            <option value="Rent">
+                                🏠 Rent
+                            </option>
+
+                            <option value="Shopping">
+                                🛍️ Shopping
+                            </option>
+
+                            <option value="Medical">
+                                💊 Medical
+                            </option>
+
+                            <option value="Education">
+                                📚 Education
+                            </option>
+
+                            <option value="Bills">
+                                🧾 Bills
+                            </option>
+
+                            <option value="Entertainment">
+                                🎬 Entertainment
+                            </option>
+
+                            <option value="Other">
+                                💰 Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- Add -->
+
+                    <button
+                        type="submit"
+                        class="add-expense-btn">
+
+                        <span>＋</span>
+                        Add Expense
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+
+        <!-- ================= MAIN CONTENT ================= -->
+
+        <div class="content-grid">
+
+
+            <!-- ================= EXPENSE HISTORY ================= -->
+
+            <section class="history-card">
+
+                <div class="card-heading">
 
                     <div>
 
-                        <span class="expense-price">
-                            ₹${expense.amount.toLocaleString("en-IN")}
-                        </span>
+                        <h2>Expense History</h2>
 
-                        <button
-                            class="delete-btn"
-                            onclick="deleteExpense(${expense.id})">
-                            Delete
-                        </button>
+                        <p>
+                            Your recent expenses
+                        </p>
 
                     </div>
 
-                `;
+                    <button
+                        class="clear-btn"
+                        onclick="clearAllExpenses()">
+
+                        🗑️ Clear
+
+                    </button>
+
+                </div>
 
 
-                list.appendChild(div);
+                <!-- Search -->
 
-            });
+                <div class="search-box">
 
-    }
+                    <span>🔍</span>
 
+                    <input
+                        type="text"
+                        id="searchExpense"
+                        placeholder="Search expenses..."
+                        oninput="searchExpenses()">
 
-    function deleteExpense(id) {
-
-        if (
-            confirm("Delete this expense?")
-        ) {
-
-            expenses =
-                expenses.filter(
-                    expense => expense.id !== id
-                );
+                </div>
 
 
-            localStorage.setItem(
-                "expenses",
-                JSON.stringify(expenses)
-            );
+                <!-- Expense List -->
+
+                <div id="expenseList">
+
+                    <div class="empty-state">
+
+                        <div class="empty-icon">
+                            💸
+                        </div>
+
+                        <h3>
+                            No expenses yet
+                        </h3>
+
+                        <p>
+                            Add your first expense above.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </section>
 
 
-            displayExpenses();
+            <!-- ================= PIE CHART ================= -->
 
-            updateDashboard();
+            <section class="chart-card">
 
-        }
+                <div class="card-heading">
 
-    }
+                    <div>
+
+                        <h2>Spending Overview</h2>
+
+                        <p>
+                            Where your money goes
+                        </p>
+
+                    </div>
+
+                    <span class="chart-emoji">
+                        📊
+                    </span>
+
+                </div>
 
 
-    displayExpenses();
+                <div class="chart-wrapper">
 
-    updateDashboard();
+                    <canvas id="expenseChart"></canvas>
 
-</script>
+                </div>
+
+
+                <div
+                    id="categorySummary"
+                    class="category-summary">
+
+                    <p class="no-data">
+                        Add expenses to see
+                        category breakdown.
+                    </p>
+
+                </div>
+
+            </section>
+
+        </div>
+
+
+        <!-- ================= ACTIONS ================= -->
+
+        <section class="bottom-actions">
+
+            <button
+                class="export-btn"
+                onclick="exportExpenses()">
+
+                📥 Export Expenses
+
+            </button>
+
+
+            <button
+                class="reset-budget-btn"
+                onclick="resetBudget()">
+
+                🔄 Reset Budget
+
+            </button>
+
+        </section>
+
+
+        <!-- ================= FOOTER ================= -->
+
+        <footer>
+
+            <div class="footer-heart">
+                ❤️
+            </div>
+
+            <p>
+                Made with love for easy monthly budgeting
+            </p>
+
+            <small>
+                Your data stays on this device.
+            </small>
+
+        </footer>
+
+    </div>
+
+
+    <!-- ================= JAVASCRIPT ================= -->
+
+    <script src="script.js"></script>
 
 </body>
 </html>
