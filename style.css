@@ -1,0 +1,759 @@
+/* ================================
+   MONTHLY EXPENSE CALCULATOR
+   Premium Responsive Design
+================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --secondary: #8b5cf6;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+
+    --bg: #f4f7fb;
+    --card: rgba(255, 255, 255, 0.88);
+    --text: #172033;
+    --muted: #6b7280;
+    --border: rgba(0, 0, 0, 0.08);
+
+    --shadow: 0 15px 40px rgba(31, 41, 55, 0.08);
+    --radius: 20px;
+}
+
+body.dark {
+    --bg: #0f172a;
+    --card: rgba(30, 41, 59, 0.92);
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --border: rgba(255, 255, 255, 0.1);
+
+    --shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+}
+
+/* ================================
+   BODY
+================================ */
+
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background:
+        radial-gradient(circle at top left, rgba(99, 102, 241, 0.14), transparent 35%),
+        radial-gradient(circle at bottom right, rgba(139, 92, 246, 0.12), transparent 35%),
+        var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* ================================
+   MAIN CONTAINER
+================================ */
+
+.container {
+    width: min(1200px, 94%);
+    margin: auto;
+    padding: 25px 0 50px;
+}
+
+/* ================================
+   HEADER
+================================ */
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding: 18px 22px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(15px);
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.logo {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: linear-gradient(
+        135deg,
+        var(--primary),
+        var(--secondary)
+    );
+
+    color: white;
+    font-size: 25px;
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+}
+
+.logo-section h1 {
+    font-size: 24px;
+    font-weight: 750;
+}
+
+.logo-section p {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 3px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* ================================
+   BUTTONS
+================================ */
+
+button {
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+    font-size: 18px;
+    transition: all 0.25s ease;
+}
+
+.icon-btn:hover {
+    transform: translateY(-2px);
+    background: var(--primary);
+    color: white;
+}
+
+.primary-btn {
+    padding: 13px 20px;
+    border-radius: 13px;
+    color: white;
+    font-weight: 600;
+
+    background: linear-gradient(
+        135deg,
+        var(--primary),
+        var(--secondary)
+    );
+
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
+    transition: 0.25s ease;
+}
+
+.primary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(99, 102, 241, 0.35);
+}
+
+/* ================================
+   MONTH SELECTOR
+================================ */
+
+.month-selector {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+}
+
+.month-selector h2 {
+    font-size: 21px;
+}
+
+.month-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.month-controls button {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    transition: 0.2s ease;
+}
+
+.month-controls button:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.month-name {
+    min-width: 130px;
+    text-align: center;
+    font-weight: 650;
+}
+
+/* ================================
+   SUMMARY CARDS
+================================ */
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.summary-card {
+    position: relative;
+    overflow: hidden;
+
+    padding: 22px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(15px);
+
+    transition: transform 0.25s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-5px);
+}
+
+.summary-card::after {
+    content: "";
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    right: -25px;
+    top: -25px;
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+.income-icon {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--success);
+}
+
+.expense-icon {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--danger);
+}
+
+.balance-icon {
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--primary);
+}
+
+.savings-icon {
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--warning);
+}
+
+.summary-card p {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 7px;
+}
+
+.summary-card h3 {
+    font-size: 25px;
+}
+
+/* ================================
+   MAIN GRID
+================================ */
+
+.main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    margin-bottom: 22px;
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 24px;
+    backdrop-filter: blur(15px);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.card-header h2 {
+    font-size: 18px;
+}
+
+.card-header span {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* ================================
+   FORM
+================================ */
+
+.form-group {
+    margin-bottom: 17px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 7px;
+    color: var(--muted);
+}
+
+.form-control {
+    width: 100%;
+    padding: 13px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.45);
+    color: var(--text);
+    outline: none;
+    font-size: 14px;
+    transition: 0.2s ease;
+}
+
+body.dark .form-control {
+    background: rgba(15, 23, 42, 0.6);
+}
+
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+/* ================================
+   EXPENSE LIST
+================================ */
+
+.expense-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.expense-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 14px;
+    border-radius: 14px;
+    background: rgba(99, 102, 241, 0.045);
+    border: 1px solid var(--border);
+
+    transition: 0.2s ease;
+}
+
+.expense-item:hover {
+    transform: translateX(4px);
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.expense-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.expense-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--primary);
+}
+
+.expense-info h4 {
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.expense-info p {
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.expense-amount {
+    font-weight: 700;
+    color: var(--danger);
+}
+
+.delete-btn {
+    margin-left: 10px;
+    color: var(--muted);
+    background: transparent;
+    font-size: 15px;
+    transition: 0.2s;
+}
+
+.delete-btn:hover {
+    color: var(--danger);
+}
+
+/* ================================
+   CHART AREA
+================================ */
+
+.chart-container {
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-placeholder {
+    width: 190px;
+    height: 190px;
+    border-radius: 50%;
+
+    background:
+        conic-gradient(
+            var(--primary) 0deg 120deg,
+            var(--secondary) 120deg 210deg,
+            var(--success) 210deg 280deg,
+            var(--warning) 280deg 330deg,
+            var(--danger) 330deg 360deg
+        );
+
+    position: relative;
+    animation: chartAppear 0.8s ease;
+}
+
+.chart-placeholder::after {
+    content: "";
+    position: absolute;
+    width: 105px;
+    height: 105px;
+    background: var(--card);
+    border-radius: 50%;
+    top: 42px;
+    left: 42px;
+}
+
+@keyframes chartAppear {
+    from {
+        transform: scale(0.7) rotate(-20deg);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1) rotate(0);
+        opacity: 1;
+    }
+}
+
+/* ================================
+   CATEGORY LIST
+================================ */
+
+.category-list {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+}
+
+.category-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.category-name {
+    width: 85px;
+    font-size: 12px;
+}
+
+.progress {
+    flex: 1;
+    height: 7px;
+    border-radius: 20px;
+    background: rgba(107, 114, 128, 0.13);
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 20px;
+    background: linear-gradient(
+        90deg,
+        var(--primary),
+        var(--secondary)
+    );
+    transition: width 0.5s ease;
+}
+
+.category-value {
+    width: 70px;
+    text-align: right;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* ================================
+   SEARCH
+================================ */
+
+.search-box {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 12px 14px 12px 40px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    outline: none;
+}
+
+.search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+}
+
+/* ================================
+   EMPTY STATE
+================================ */
+
+.empty-state {
+    text-align: center;
+    padding: 35px 15px;
+    color: var(--muted);
+}
+
+.empty-state-icon {
+    font-size: 42px;
+    margin-bottom: 12px;
+    opacity: 0.6;
+}
+
+.empty-state h3 {
+    color: var(--text);
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+/* ================================
+   FOOTER
+================================ */
+
+.footer {
+    text-align: center;
+    padding: 25px 0 5px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.footer strong {
+    color: var(--primary);
+}
+
+/* ================================
+   TOAST MESSAGE
+================================ */
+
+.toast {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+
+    padding: 14px 20px;
+    border-radius: 13px;
+
+    background: #111827;
+    color: white;
+
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+    transform: translateY(100px);
+    opacity: 0;
+
+    transition: 0.3s ease;
+    z-index: 9999;
+}
+
+.toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* ================================
+   MOBILE
+================================ */
+
+@media (max-width: 900px) {
+
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .main-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .container {
+        width: 92%;
+        padding-top: 15px;
+    }
+
+    .header {
+        padding: 15px;
+    }
+
+    .logo {
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+    }
+
+    .logo-section h1 {
+        font-size: 18px;
+    }
+
+    .logo-section p {
+        font-size: 11px;
+    }
+
+    .summary-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .summary-card {
+        padding: 16px;
+    }
+
+    .summary-card h3 {
+        font-size: 19px;
+    }
+
+    .card {
+        padding: 18px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .month-selector {
+        align-items: flex-start;
+        gap: 12px;
+        flex-direction: column;
+    }
+
+    .month-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .month-name {
+        flex: 1;
+    }
+
+    .chart-placeholder {
+        width: 160px;
+        height: 160px;
+    }
+
+    .chart-placeholder::after {
+        width: 90px;
+        height: 90px;
+        top: 35px;
+        left: 35px;
+    }
+
+    .toast {
+        left: 20px;
+        right: 20px;
+        bottom: 20px;
+        text-align: center;
+    }
+}
+
+/* ================================
+   SMALL PHONE
+================================ */
+
+@media (max-width: 380px) {
+
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .header-actions .icon-btn {
+        width: 38px;
+        height: 38px;
+    }
+
+    .summary-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .card-icon {
+        margin-bottom: 0;
+    }
+}
