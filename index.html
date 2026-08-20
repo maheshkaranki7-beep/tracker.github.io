@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Monthly Expense Calculator</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 20px;
+            color: #222;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        header {
+            background: rgba(255,255,255,0.95);
+            padding: 25px;
+            border-radius: 25px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        header h1 {
+            color: #5b4bc4;
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: #666;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.95);
+            padding: 25px;
+            border-radius: 22px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        }
+
+        .card h3 {
+            color: #666;
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+
+        .amount {
+            font-size: 28px;
+            font-weight: bold;
+            color: #5b4bc4;
+        }
+
+        .main {
+            display: grid;
+            grid-template-columns: 1fr 1.4fr;
+            gap: 20px;
+        }
+
+        .box {
+            background: rgba(255,255,255,0.96);
+            padding: 25px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        }
+
+        .box h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 14px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            outline: none;
+            font-size: 15px;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.2);
+        }
+
+        .expense-list {
+            max-height: 430px;
+            overflow-y: auto;
+        }
+
+        .expense {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f7f7fb;
+            border-radius: 15px;
+            margin-bottom: 12px;
+        }
+
+        .expense-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .expense-name {
+            font-weight: bold;
+        }
+
+        .expense-category {
+            font-size: 13px;
+            color: #777;
+        }
+
+        .expense-price {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .delete-btn {
+            width: auto;
+            padding: 7px 10px;
+            margin-left: 10px;
+            background: #ff5c5c;
+            font-size: 12px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px 10px;
+            color: #888;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+
+        @media (max-width: 800px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .main {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 26px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+        <h1>💰 Monthly Expense Calculator</h1>
+        <p>Simple & smart expense tracking</p>
+    </header>
+
+    <div class="dashboard">
+
+        <div class="card">
+            <h3>💵 Monthly Budget</h3>
+            <div class="amount" id="budgetDisplay">₹0</div>
+        </div>
+
+        <div class="card">
+            <h3>💸 Total Expenses</h3>
+            <div class="amount" id="totalDisplay">₹0</div>
+        </div>
+
+        <div class="card">
+            <h3>💚 Remaining</h3>
+            <div class="amount" id="remainingDisplay">₹0</div>
+        </div>
+
+    </div>
+
+    <div class="main">
+
+        <!-- Add Expense -->
+        <div class="box">
+
+            <h2>➕ Add Expense</h2>
+
+            <input
+                type="number"
+                id="budget"
+                placeholder="Enter monthly budget"
+            >
+
+            <input
+                type="text"
+                id="expenseName"
+                placeholder="Expense name"
+            >
+
+            <input
+                type="number"
+                id="expenseAmount"
+                placeholder="Amount ₹"
+            >
+
+            <select id="category">
+                <option value="">Select category</option>
+                <option value="🍚 Food">🍚 Food</option>
+                <option value="🛒 Groceries">🛒 Groceries</option>
+                <option value="🏠 House">🏠 House</option>
+                <option value="💡 Bills">💡 Bills</option>
+                <option value="🚗 Transport">🚗 Transport</option>
+                <option value="💊 Medical">💊 Medical</option>
+                <option value="🎓 Education">🎓 Education</option>
+                <option value="🛍️ Shopping">🛍️ Shopping</option>
+                <option value="📱 Mobile">📱 Mobile</option>
+                <option value="📦 Other">📦 Other</option>
+            </select>
+
+            <input
+                type="date"
+                id="expenseDate"
+            >
+
+            <button onclick="addExpense()">
+                Add Expense
+            </button>
+
+        </div>
+
+        <!-- Expense History -->
+        <div class="box">
+
+            <h2>📋 Expense History</h2>
+
+            <div id="expenseList" class="expense-list">
+                <div class="empty">
+                    No expenses added yet.
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="footer">
+        Made with ❤️ for easy monthly expense management
+    </div>
+
+</div>
+
+<script>
+
+    let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+
+    let savedBudget =
+        Number(localStorage.getItem("budget")) || 0;
+
+    document.getElementById("budgetDisplay").innerText =
+        "₹" + savedBudget.toLocaleString("en-IN");
+
+    function updateDashboard() {
+
+        let total = expenses.reduce(
+            (sum, expense) => sum + expense.amount,
+            0
+        );
+
+        let remaining = savedBudget - total;
+
+        document.getElementById("budgetDisplay").innerText =
+            "₹" + savedBudget.toLocaleString("en-IN");
+
+        document.getElementById("totalDisplay").innerText =
+            "₹" + total.toLocaleString("en-IN");
+
+        document.getElementById("remainingDisplay").innerText =
+            "₹" + remaining.toLocaleString("en-IN");
+    }
+
+
+    function addExpense() {
+
+        let budgetInput =
+            document.getElementById("budget").value;
+
+        let name =
+            document.getElementById("expenseName").value.trim();
+
+        let amount =
+            Number(document.getElementById("expenseAmount").value);
+
+        let category =
+            document.getElementById("category").value;
+
+        let date =
+            document.getElementById("expenseDate").value;
+
+
+        if (budgetInput !== "") {
+
+            savedBudget = Number(budgetInput);
+
+            localStorage.setItem(
+                "budget",
+                savedBudget
+            );
+
+        }
+
+
+        if (
+            name === "" ||
+            amount <= 0 ||
+            category === "" ||
+            date === ""
+        ) {
+
+            alert("Please fill all expense details.");
+
+            return;
+        }
+
+
+        let expense = {
+
+            id: Date.now(),
+
+            name: name,
+
+            amount: amount,
+
+            category: category,
+
+            date: date
+
+        };
+
+
+        expenses.push(expense);
+
+
+        localStorage.setItem(
+            "expenses",
+            JSON.stringify(expenses)
+        );
+
+
+        document.getElementById("expenseName").value = "";
+
+        document.getElementById("expenseAmount").value = "";
+
+        document.getElementById("category").value = "";
+
+        document.getElementById("expenseDate").value = "";
+
+
+        displayExpenses();
+
+        updateDashboard();
+
+    }
+
+
+    function displayExpenses() {
+
+        let list =
+            document.getElementById("expenseList");
+
+
+        if (expenses.length === 0) {
+
+            list.innerHTML = `
+                <div class="empty">
+                    No expenses added yet.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        list.innerHTML = "";
+
+
+        expenses
+            .slice()
+            .reverse()
+            .forEach(expense => {
+
+                let div =
+                    document.createElement("div");
+
+                div.className = "expense";
+
+
+                div.innerHTML = `
+
+                    <div class="expense-info">
+
+                        <div class="expense-name">
+                            ${expense.name}
+                        </div>
+
+                        <div class="expense-category">
+                            ${expense.category}
+                            • ${expense.date}
+                        </div>
+
+                    </div>
+
+                    <div>
+
+                        <span class="expense-price">
+                            ₹${expense.amount.toLocaleString("en-IN")}
+                        </span>
+
+                        <button
+                            class="delete-btn"
+                            onclick="deleteExpense(${expense.id})">
+                            Delete
+                        </button>
+
+                    </div>
+
+                `;
+
+
+                list.appendChild(div);
+
+            });
+
+    }
+
+
+    function deleteExpense(id) {
+
+        if (
+            confirm("Delete this expense?")
+        ) {
+
+            expenses =
+                expenses.filter(
+                    expense => expense.id !== id
+                );
+
+
+            localStorage.setItem(
+                "expenses",
+                JSON.stringify(expenses)
+            );
+
+
+            displayExpenses();
+
+            updateDashboard();
+
+        }
+
+    }
+
+
+    displayExpenses();
+
+    updateDashboard();
+
+</script>
+
+</body>
+</html>
