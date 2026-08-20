@@ -1,39 +1,110 @@
 /* =========================================================
-   MONTHLY EXPENSE TRACKER
-   Advanced • Colorful • Mobile Friendly
-   ========================================================= */
+   MY MONTHLY BUDGET
+   Complete Application JavaScript
+========================================================= */
 
-const STORAGE_KEY = "monthlyExpenseTrackerData";
 
-let appData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
-    budget: 10000,
-    expenses: []
+/* =========================================================
+   STORAGE
+========================================================= */
+
+const STORAGE_KEY = "myMonthlyBudgetData";
+
+let appData = JSON.parse(
+    localStorage.getItem(STORAGE_KEY)
+) || {
+    budgets: {},
+    expenses: {},
+    darkMode: false
 };
 
-let selectedMonth =
-    new Date().toISOString().slice(0, 7);
 
-let pieChart = null;
+/* =========================================================
+   ELEMENTS
+========================================================= */
+
+const monthSelect =
+    document.getElementById("monthSelect");
+
+const monthLabel =
+    document.getElementById("monthLabel");
+
+const budgetInput =
+    document.getElementById("budgetInput");
+
+const saveBudgetBtn =
+    document.getElementById("saveBudgetBtn");
+
+const expenseAmount =
+    document.getElementById("expenseAmount");
+
+const addExpenseBtn =
+    document.getElementById("addExpenseBtn");
+
+const selectedCategory =
+    document.getElementById("selectedCategory");
+
+const categoryButtons =
+    document.querySelectorAll(".category-btn");
+
+const totalSpent =
+    document.getElementById("totalSpent");
+
+const remainingBudget =
+    document.getElementById("remainingBudget");
+
+const budgetPercentage =
+    document.getElementById("budgetPercentage");
+
+const budgetStatus =
+    document.getElementById("budgetStatus");
+
+const progressBar =
+    document.getElementById("progressBar");
+
+const expenseList =
+    document.getElementById("expenseList");
+
+const emptyState =
+    document.getElementById("emptyState");
+
+const expenseCount =
+    document.getElementById("expenseCount");
+
+const categorySummary =
+    document.getElementById("categorySummary");
+
+const expenseChart =
+    document.getElementById("expenseChart");
+
+const themeBtn =
+    document.getElementById("themeBtn");
+
+const clearDataBtn =
+    document.getElementById("clearDataBtn");
+
+
+let chartInstance = null;
 
 
 /* =========================================================
-   ELEMENT HELPERS
-   ========================================================= */
+   CURRENT MONTH
+========================================================= */
 
-function getElement(...ids) {
-    for (const id of ids) {
-        const element = document.getElementById(id);
-        if (element) return element;
-    }
-    return null;
-}
+const today = new Date();
+
+const currentMonth =
+    String(today.getMonth() + 1).padStart(2, "0");
+
+monthSelect.value = currentMonth;
 
 
 /* =========================================================
-   SAVE DATA
-   ========================================================= */
+   SAVE APPLICATION DATA
+========================================================= */
 
 function saveData() {
+
     localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify(appData)
@@ -42,447 +113,527 @@ function saveData() {
 
 
 /* =========================================================
-   CURRENT MONTH
-   ========================================================= */
+   GET CURRENT MONTH
+========================================================= */
 
 function getCurrentMonth() {
-    return selectedMonth;
+
+    return monthSelect.value;
+
 }
 
 
 /* =========================================================
-   MONTH EXPENSES
-   ========================================================= */
+   GET MONTH NAME
+========================================================= */
 
-function getMonthExpenses() {
+function getMonthName(monthNumber) {
 
-    return appData.expenses.filter(expense => {
+    const months = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+    ];
 
-        return expense.date &&
-            expense.date.slice(0, 7) === getCurrentMonth();
+    return months[
+        Number(monthNumber) - 1
+    ];
 
-    });
 }
 
 
 /* =========================================================
-   TOTAL EXPENSE
-   ========================================================= */
+   UPDATE MONTH LABEL
+========================================================= */
 
-function getTotalExpense() {
+function updateMonthLabel() {
 
-    return getMonthExpenses().reduce(
-        (total, expense) =>
-            total + Number(expense.amount),
-        0
-    );
+    const month =
+        getCurrentMonth();
+
+    monthLabel.textContent =
+        getMonthName(month);
+
 }
 
 
 /* =========================================================
-   REMAINING MONEY
-   ========================================================= */
+   ENSURE MONTH EXISTS
+========================================================= */
 
-function getRemaining() {
+function ensureMonthExists(month) {
 
-    return Number(appData.budget) - getTotalExpense();
+    if (!appData.expenses[month]) {
+
+        appData.expenses[month] = [];
+
+    }
 
 }
 
 
 /* =========================================================
    FORMAT MONEY
-   ========================================================= */
+========================================================= */
 
-function money(amount) {
+function formatMoney(value) {
 
-    return "₹" + Number(amount).toLocaleString("en-IN", {
-        maximumFractionDigits: 2
-    });
-
-}
-
-
-/* =========================================================
-   FORMAT MONTH
-   ========================================================= */
-
-function formatMonth(month) {
-
-    const date = new Date(month + "-01");
-
-    return date.toLocaleDateString("en-IN", {
-        month: "long",
-        year: "numeric"
-    });
-
-}
-
-
-/* =========================================================
-   UPDATE BUDGET
-   ========================================================= */
-
-function updateBudget() {
-
-    const budgetInput = getElement(
-        "budget",
-        "monthlyBudget",
-        "budgetInput"
-    );
-
-    if (!budgetInput) return;
-
-    const newBudget =
-        Number(budgetInput.value);
-
-    if (isNaN(newBudget) || newBudget < 0) {
-
-        alert("Please enter a valid budget.");
-
-        return;
-    }
-
-    appData.budget = newBudget;
-
-    saveData();
-
-    updateDashboard();
-
-}
-
-
-/* =========================================================
-   EDIT BUDGET
-   ========================================================= */
-
-function editBudget() {
-
-    const currentBudget =
-        Number(appData.budget);
-
-    const newBudget =
-        prompt(
-            "Enter your monthly budget:",
-            currentBudget
+    return "₹" +
+        Number(value || 0).toLocaleString(
+            "en-IN",
+            {
+                maximumFractionDigits: 0
+            }
         );
 
-    if (newBudget === null) return;
+}
 
-    const value =
-        Number(newBudget);
 
-    if (isNaN(value) || value < 0) {
+/* =========================================================
+   LOAD BUDGET
+========================================================= */
 
-        alert("Please enter a valid amount.");
+function loadBudget() {
 
-        return;
-    }
+    const month =
+        getCurrentMonth();
 
-    appData.budget = value;
+    const budget =
+        appData.budgets[month] || 0;
 
-    saveData();
-
-    updateDashboard();
+    budgetInput.value =
+        budget > 0 ? budget : "";
 
 }
+
+
+/* =========================================================
+   SAVE BUDGET
+========================================================= */
+
+saveBudgetBtn.addEventListener(
+    "click",
+    function () {
+
+        const month =
+            getCurrentMonth();
+
+        const value =
+            Number(budgetInput.value);
+
+        if (
+            !value ||
+            value < 0
+        ) {
+
+            alert(
+                "Please enter a valid budget amount."
+            );
+
+            return;
+
+        }
+
+        appData.budgets[month] =
+            value;
+
+        saveData();
+
+        updateDashboard();
+
+        saveBudgetBtn.textContent =
+            "Saved ✓";
+
+        setTimeout(
+            function () {
+
+                saveBudgetBtn.textContent =
+                    "Save";
+
+            },
+            1500
+        );
+
+    }
+);
+
+
+/* =========================================================
+   ALLOW ENTER KEY FOR BUDGET
+========================================================= */
+
+budgetInput.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (event.key === "Enter") {
+
+            saveBudgetBtn.click();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   CATEGORY SELECTION
+========================================================= */
+
+categoryButtons.forEach(
+    function (button) {
+
+        button.addEventListener(
+            "click",
+            function () {
+
+                categoryButtons.forEach(
+                    function (item) {
+
+                        item.classList.remove(
+                            "active"
+                        );
+
+                    }
+                );
+
+                button.classList.add(
+                    "active"
+                );
+
+                selectedCategory.value =
+                    button.dataset.category;
+
+            }
+        );
+
+    }
+);
 
 
 /* =========================================================
    ADD EXPENSE
-   ========================================================= */
+========================================================= */
 
-function addExpense(event) {
+addExpenseBtn.addEventListener(
+    "click",
+    function () {
 
-    if (event) {
-        event.preventDefault();
-    }
+        const amount =
+            Number(expenseAmount.value);
 
-    const nameInput = getElement(
-        "name",
-        "expenseName"
-    );
+        const category =
+            selectedCategory.value;
 
-    const amountInput = getElement(
-        "amount",
-        "expenseAmount"
-    );
-
-    const categoryInput = getElement(
-        "category",
-        "expenseCategory"
-    );
-
-    const dateInput = getElement(
-        "date",
-        "expenseDate"
-    );
+        const month =
+            getCurrentMonth();
 
 
-    if (!nameInput || !amountInput) {
+        if (
+            !amount ||
+            amount <= 0
+        ) {
 
-        alert(
-            "Expense form fields are missing."
+            alert(
+                "Please enter an expense amount."
+            );
+
+            expenseAmount.focus();
+
+            return;
+
+        }
+
+
+        ensureMonthExists(month);
+
+
+        const expense = {
+
+            id:
+                Date.now(),
+
+            amount:
+                amount,
+
+            category:
+                category,
+
+            date:
+                new Date().toISOString(),
+
+        };
+
+
+        appData.expenses[month].push(
+            expense
         );
 
-        return;
+
+        saveData();
+
+
+        expenseAmount.value =
+            "";
+
+
+        updateDashboard();
+
+
+        addExpenseBtn.innerHTML =
+            "<span>✓</span> Added";
+
+
+        setTimeout(
+            function () {
+
+                addExpenseBtn.innerHTML =
+                    "<span>＋</span> Add Expense";
+
+            },
+            1000
+        );
+
     }
+);
 
 
-    const name =
-        nameInput.value.trim();
+/* =========================================================
+   ENTER KEY FOR EXPENSE
+========================================================= */
 
-    const amount =
-        Number(amountInput.value);
+expenseAmount.addEventListener(
+    "keydown",
+    function (event) {
 
-    const category =
-        categoryInput ?
-            categoryInput.value :
-            "Other";
+        if (event.key === "Enter") {
 
-    const date =
-        dateInput && dateInput.value ?
-            dateInput.value :
-            new Date().toISOString().slice(0, 10);
+            addExpenseBtn.click();
 
+        }
 
-    if (!name) {
-
-        alert("Please enter an expense name.");
-
-        return;
     }
+);
 
 
-    if (!amount || amount <= 0) {
+/* =========================================================
+   GET MONTH EXPENSES
+========================================================= */
 
-        alert("Please enter a valid amount.");
+function getMonthExpenses() {
 
-        return;
-    }
+    const month =
+        getCurrentMonth();
 
+    ensureMonthExists(month);
 
-    const expense = {
-
-        id: Date.now(),
-
-        name: name,
-
-        amount: amount,
-
-        category:
-            category || "Other",
-
-        date: date
-
-    };
-
-
-    appData.expenses.push(expense);
-
-    saveData();
-
-    nameInput.value = "";
-
-    amountInput.value = "";
-
-
-    updateDashboard();
-
-
-    showMessage(
-        "Expense added successfully! 💰"
-    );
+    return appData.expenses[month];
 
 }
 
 
 /* =========================================================
-   DELETE EXPENSE
-   ========================================================= */
+   CALCULATE TOTAL
+========================================================= */
 
-function deleteExpense(id) {
-
-    const confirmDelete =
-        confirm(
-            "Are you sure you want to delete this expense?"
-        );
-
-    if (!confirmDelete) return;
-
-
-    appData.expenses =
-        appData.expenses.filter(
-            expense =>
-                expense.id !== id
-        );
-
-
-    saveData();
-
-    updateDashboard();
-
-}
-
-
-/* =========================================================
-   CLEAR CURRENT MONTH
-   ========================================================= */
-
-function clearCurrentMonth() {
-
-    const monthExpenses =
-        getMonthExpenses();
-
-    if (monthExpenses.length === 0) {
-
-        alert(
-            "There are no expenses for this month."
-        );
-
-        return;
-    }
-
-
-    const confirmed =
-        confirm(
-            `Delete all expenses for ${formatMonth(selectedMonth)}?`
-        );
-
-
-    if (!confirmed) return;
-
-
-    appData.expenses =
-        appData.expenses.filter(
-            expense =>
-                expense.date.slice(0, 7) !==
-                selectedMonth
-        );
-
-
-    saveData();
-
-    updateDashboard();
-
-}
-
-
-/* =========================================================
-   DISPLAY EXPENSES
-   ========================================================= */
-
-function displayExpenses() {
-
-    const list =
-        getElement(
-            "expenseList",
-            "expensesList",
-            "expenseHistory"
-        );
-
-    if (!list) return;
-
-
-    list.innerHTML = "";
-
+function calculateTotal() {
 
     const expenses =
-        [...getMonthExpenses()].sort(
-            (a, b) =>
-                new Date(b.date) -
-                new Date(a.date)
-        );
+        getMonthExpenses();
 
+    return expenses.reduce(
+        function (total, expense) {
 
-    if (expenses.length === 0) {
+            return total +
+                Number(expense.amount);
 
-        list.innerHTML = `
-
-            <div class="empty-state">
-
-                <div class="empty-icon">
-                    💸
-                </div>
-
-                <h3>No expenses yet</h3>
-
-                <p>
-                    Add an expense to see it here.
-                </p>
-
-            </div>
-
-        `;
-
-        return;
-    }
-
-
-    expenses.forEach(expense => {
-
-        const item =
-            document.createElement("div");
-
-
-        item.className =
-            "expense-item";
-
-
-        item.innerHTML = `
-
-            <div class="expense-info">
-
-                <div class="expense-icon">
-                    ${getCategoryIcon(expense.category)}
-                </div>
-
-                <div>
-
-                    <h4>
-                        ${escapeHTML(expense.name)}
-                    </h4>
-
-                    <p>
-                        ${escapeHTML(expense.category)}
-                        •
-                        ${formatDate(expense.date)}
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="expense-right">
-
-                <strong>
-                    ${money(expense.amount)}
-                </strong>
-
-                <button
-                    class="delete-btn"
-                    onclick="deleteExpense(${expense.id})"
-                    aria-label="Delete expense"
-                >
-                    🗑️
-                </button>
-
-            </div>
-
-        `;
-
-
-        list.appendChild(item);
-
-    });
+        },
+        0
+    );
 
 }
 
 
 /* =========================================================
-   CATEGORY ICONS
-   ========================================================= */
+   GET BUDGET
+========================================================= */
+
+function getBudget() {
+
+    const month =
+        getCurrentMonth();
+
+    return Number(
+        appData.budgets[month] || 0
+    );
+
+}
+
+
+/* =========================================================
+   UPDATE DASHBOARD
+========================================================= */
+
+function updateDashboard() {
+
+    updateMonthLabel();
+
+    loadBudget();
+
+    updateSummary();
+
+    updateProgress();
+
+    displayExpenses();
+
+    updateCategorySummary();
+
+    updateChart();
+
+}
+
+
+/* =========================================================
+   SUMMARY
+========================================================= */
+
+function updateSummary() {
+
+    const budget =
+        getBudget();
+
+    const spent =
+        calculateTotal();
+
+    const remaining =
+        budget - spent;
+
+
+    totalSpent.textContent =
+        formatMoney(spent);
+
+
+    remainingBudget.textContent =
+        formatMoney(
+            Math.max(remaining, 0)
+        );
+
+
+    if (remaining < 0) {
+
+        remainingBudget.style.color =
+            "#ef5350";
+
+    } else {
+
+        remainingBudget.style.color =
+            "";
+
+    }
+
+}
+
+
+/* =========================================================
+   PROGRESS BAR
+========================================================= */
+
+function updateProgress() {
+
+    const budget =
+        getBudget();
+
+    const spent =
+        calculateTotal();
+
+
+    if (budget <= 0) {
+
+        progressBar.style.width =
+            "0%";
+
+        budgetPercentage.textContent =
+            "0%";
+
+        budgetStatus.textContent =
+            "Set your budget to start";
+
+        return;
+
+    }
+
+
+    const percentage =
+        Math.round(
+            (spent / budget) * 100
+        );
+
+
+    const displayPercentage =
+        Math.min(
+            percentage,
+            100
+        );
+
+
+    progressBar.style.width =
+        displayPercentage + "%";
+
+
+    budgetPercentage.textContent =
+        percentage + "%";
+
+
+    if (percentage < 50) {
+
+        budgetStatus.textContent =
+            "You're doing great! 😊";
+
+    }
+
+    else if (percentage < 80) {
+
+        budgetStatus.textContent =
+            "Keep an eye on spending 👀";
+
+    }
+
+    else if (percentage < 100) {
+
+        budgetStatus.textContent =
+            "Almost at your limit ⚠️";
+
+    }
+
+    else if (percentage === 100) {
+
+        budgetStatus.textContent =
+            "Budget fully used";
+
+    }
+
+    else {
+
+        budgetStatus.textContent =
+            "You've exceeded your budget 🚨";
+
+    }
+
+}
+
+
+/* =========================================================
+   CATEGORY ICON
+========================================================= */
 
 function getCategoryIcon(category) {
 
@@ -494,52 +645,40 @@ function getCategoryIcon(category) {
 
         Transport: "🚗",
 
-        Electricity: "💡",
-
-        Water: "💧",
-
-        Rent: "🏠",
+        Bills: "🧾",
 
         Shopping: "🛍️",
 
         Medical: "💊",
 
-        Education: "📚",
+        Home: "🏠",
 
-        Entertainment: "🎬",
-
-        Bills: "🧾",
-
-        Fuel: "⛽",
-
-        Travel: "✈️",
-
-        Other: "💰"
+        Other: "✨"
 
     };
 
-
-    return icons[category] || "💰";
+    return (
+        icons[category] ||
+        "✨"
+    );
 
 }
 
 
 /* =========================================================
    FORMAT DATE
-   ========================================================= */
+========================================================= */
 
 function formatDate(dateString) {
 
     const date =
         new Date(dateString);
 
-
     return date.toLocaleDateString(
         "en-IN",
         {
             day: "2-digit",
-            month: "short",
-            year: "numeric"
+            month: "short"
         }
     );
 
@@ -547,86 +686,251 @@ function formatDate(dateString) {
 
 
 /* =========================================================
-   CATEGORY TOTALS
-   ========================================================= */
+   DISPLAY EXPENSES
+========================================================= */
 
-function getCategoryTotals() {
+function displayExpenses() {
 
-    const totals = {};
-
-    getMonthExpenses().forEach(expense => {
-
-        const category =
-            expense.category || "Other";
+    const expenses =
+        [...getMonthExpenses()]
+            .reverse();
 
 
-        if (!totals[category]) {
+    expenseCount.textContent =
+        expenses.length;
 
-            totals[category] = 0;
+
+    expenseList.innerHTML =
+        "";
+
+
+    if (expenses.length === 0) {
+
+        expenseList.innerHTML = `
+
+            <div class="empty-state">
+
+                <div class="empty-icon">
+                    🌱
+                </div>
+
+                <h3>
+                    No expenses yet
+                </h3>
+
+                <p>
+                    Add your first expense above.
+                </p>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    expenses.forEach(
+        function (expense) {
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+            item.className =
+                "expense-item";
+
+
+            item.innerHTML = `
+
+                <div class="expense-info">
+
+                    <div class="expense-icon">
+                        ${getCategoryIcon(
+                            expense.category
+                        )}
+                    </div>
+
+                    <div>
+
+                        <h4>
+                            ${expense.category}
+                        </h4>
+
+                        <p>
+                            ${formatDate(
+                                expense.date
+                            )}
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="expense-right">
+
+                    <strong>
+                        ${formatMoney(
+                            expense.amount
+                        )}
+                    </strong>
+
+                    <button
+                        type="button"
+                        class="delete-btn"
+                        data-id="${expense.id}"
+                        aria-label="Delete expense"
+                    >
+                        🗑️
+                    </button>
+
+                </div>
+
+            `;
+
+
+            const deleteButton =
+                item.querySelector(
+                    ".delete-btn"
+                );
+
+
+            deleteButton.addEventListener(
+                "click",
+                function () {
+
+                    deleteExpense(
+                        expense.id
+                    );
+
+                }
+            );
+
+
+            expenseList.appendChild(
+                item
+            );
 
         }
+    );
+
+}
 
 
-        totals[category] +=
-            Number(expense.amount);
+/* =========================================================
+   DELETE EXPENSE
+========================================================= */
 
-    });
+function deleteExpense(id) {
+
+    const month =
+        getCurrentMonth();
 
 
-    return totals;
+    const confirmDelete =
+        confirm(
+            "Delete this expense?"
+        );
+
+
+    if (!confirmDelete) {
+        return;
+    }
+
+
+    appData.expenses[month] =
+        appData.expenses[month]
+            .filter(
+                function (expense) {
+
+                    return expense.id !== id;
+
+                }
+            );
+
+
+    saveData();
+
+    updateDashboard();
 
 }
 
 
 /* =========================================================
    CATEGORY SUMMARY
-   ========================================================= */
+========================================================= */
 
-function displayCategorySummary() {
+function updateCategorySummary() {
 
-    const container =
-        getElement(
-            "categorySummary",
-            "categoryList"
-        );
+    const expenses =
+        getMonthExpenses();
 
-    if (!container) return;
+    const totals = {};
 
 
-    container.innerHTML = "";
+    expenses.forEach(
+        function (expense) {
 
+            if (
+                !totals[expense.category]
+            ) {
 
-    const totals =
-        getCategoryTotals();
+                totals[expense.category] =
+                    0;
+
+            }
+
+            totals[expense.category] +=
+                Number(expense.amount);
+
+        }
+    );
 
 
     const categories =
-        Object.keys(totals);
+        Object.keys(totals)
+            .sort(
+                function (a, b) {
+
+                    return (
+                        totals[b] -
+                        totals[a]
+                    );
+
+                }
+            );
+
+
+    categorySummary.innerHTML =
+        "";
 
 
     if (categories.length === 0) {
 
-        container.innerHTML = `
+        categorySummary.innerHTML = `
+
             <p class="no-data">
-                No category data yet.
+                Your spending breakdown
+                will appear here.
             </p>
+
         `;
 
         return;
+
     }
 
 
-    categories
-        .sort(
-            (a, b) =>
-                totals[b] -
-                totals[a]
-        )
-        .forEach(category => {
+    categories.forEach(
+        function (category) {
 
             const row =
-                document.createElement("div");
-
+                document.createElement(
+                    "div"
+                );
 
             row.className =
                 "category-row";
@@ -637,47 +941,75 @@ function displayCategorySummary() {
                 <div class="category-name">
 
                     <span class="category-icon">
-                        ${getCategoryIcon(category)}
+                        ${getCategoryIcon(
+                            category
+                        )}
                     </span>
 
                     <span>
-                        ${escapeHTML(category)}
+                        ${category}
                     </span>
 
                 </div>
 
                 <strong>
-                    ${money(totals[category])}
+                    ${formatMoney(
+                        totals[category]
+                    )}
                 </strong>
 
             `;
 
 
-            container.appendChild(row);
+            categorySummary.appendChild(
+                row
+            );
 
-        });
+        }
+    );
 
 }
 
 
 /* =========================================================
-   PIE CHART
-   ========================================================= */
+   PIE / DOUGHNUT CHART
+========================================================= */
 
 function updateChart() {
 
-    const canvas =
-        getElement(
-            "expenseChart",
-            "pieChart",
-            "categoryChart"
-        );
+    if (
+        typeof Chart ===
+        "undefined"
+    ) {
 
-    if (!canvas) return;
+        return;
+
+    }
 
 
-    const totals =
-        getCategoryTotals();
+    const expenses =
+        getMonthExpenses();
+
+    const totals = {};
+
+
+    expenses.forEach(
+        function (expense) {
+
+            if (
+                !totals[expense.category]
+            ) {
+
+                totals[expense.category] =
+                    0;
+
+            }
+
+            totals[expense.category] +=
+                Number(expense.amount);
+
+        }
+    );
 
 
     const labels =
@@ -688,809 +1020,152 @@ function updateChart() {
         Object.values(totals);
 
 
-    if (
-        typeof Chart === "undefined"
-    ) {
+    if (chartInstance) {
 
-        console.log(
-            "Chart.js is not loaded."
-        );
+        chartInstance.destroy();
+
+    }
+
+
+    if (labels.length === 0) {
 
         return;
-    }
-
-
-    if (pieChart) {
-
-        pieChart.destroy();
 
     }
 
 
-    const ctx =
-        canvas.getContext("2d");
+    const colors = [
+
+        "#7657ff",
+
+        "#f34f9d",
+
+        "#3b82f6",
+
+        "#22c55e",
+
+        "#ff9f43",
+
+        "#22c7e8",
+
+        "#ef5350",
+
+        "#f6c945"
+
+    ];
 
 
-    pieChart =
-        new Chart(ctx, {
+    chartInstance =
+        new Chart(
+            expenseChart,
+            {
 
-            type: "doughnut",
+                type:
+                    "doughnut",
 
-            data: {
+                data: {
 
-                labels: labels,
+                    labels:
+                        labels,
 
-                datasets: [{
+                    datasets: [
 
-                    data: values,
+                        {
 
-                    borderWidth: 3,
+                            data:
+                                values,
 
-                    borderColor: "#ffffff",
+                            backgroundColor:
+                                colors.slice(
+                                    0,
+                                    labels.length
+                                ),
 
-                    backgroundColor: [
+                            borderWidth:
+                                4,
 
-                        "#7c3aed",
+                            borderColor:
+                                document.body
+                                    .classList
+                                    .contains(
+                                        "dark-mode"
+                                    )
+                                    ? "#1b172d"
+                                    : "#ffffff",
 
-                        "#ec4899",
+                            hoverOffset:
+                                8
 
-                        "#2563eb",
-
-                        "#06b6d4",
-
-                        "#10b981",
-
-                        "#f97316",
-
-                        "#eab308",
-
-                        "#ef4444",
-
-                        "#8b5cf6",
-
-                        "#14b8a6"
+                        }
 
                     ]
 
-                }]
+                },
 
-            },
+                options: {
 
+                    responsive:
+                        true,
 
-            options: {
+                    maintainAspectRatio:
+                        false,
 
-                responsive: true,
+                    cutout:
+                        "67%",
 
-                maintainAspectRatio: false,
+                    plugins: {
 
-                cutout: "62%",
+                        legend: {
 
+                            position:
+                                "bottom",
 
-                plugins: {
+                            labels: {
 
-                    legend: {
+                                padding:
+                                    15,
 
-                        position: "bottom",
+                                usePointStyle:
+                                    true,
 
-                        labels: {
+                                font: {
 
-                            padding: 15,
+                                    size:
+                                        11
 
-                            usePointStyle: true,
-
-                            font: {
-
-                                size: 13
+                                }
 
                             }
 
                         }
 
+                    },
+
+                    animation: {
+
+                        animateRotate:
+                            true,
+
+                        animateScale:
+                            true
+
                     }
 
-                },
-
-
-                animation: {
-
-                    animateRotate: true,
-
-                    animateScale: true,
-
-                    duration: 1000
-
                 }
 
             }
-
-        });
+        );
 
 }
 
 
 /* =========================================================
-   UPDATE DASHBOARD
-   ========================================================= */
-
-function updateDashboard() {
-
-    const total =
-        getTotalExpense();
-
-
-    const budget =
-        Number(appData.budget);
-
-
-    const remaining =
-        budget - total;
-
-
-    const totalElement =
-        getElement(
-            "totalExpense",
-            "totalExpenses"
-        );
-
-
-    const budgetElement =
-        getElement(
-            "budgetDisplay",
-            "monthlyBudgetDisplay",
-            "budgetAmount"
-        );
-
-
-    const remainingElement =
-        getElement(
-            "remaining",
-            "remainingAmount"
-        );
-
-
-    const countElement =
-        getElement(
-            "expenseCount",
-            "totalCount"
-        );
-
-
-    if (totalElement) {
-
-        totalElement.textContent =
-            money(total);
-
-    }
-
-
-    if (budgetElement) {
-
-        budgetElement.textContent =
-            money(budget);
-
-    }
-
-
-    if (remainingElement) {
-
-        remainingElement.textContent =
-            money(remaining);
-
-        if (remaining < 0) {
-
-            remainingElement.classList.add(
-                "negative"
-            );
-
-        } else {
-
-            remainingElement.classList.remove(
-                "negative"
-            );
-
-        }
-
-    }
-
-
-    if (countElement) {
-
-        countElement.textContent =
-            getMonthExpenses().length;
-
-    }
-
-
-    updateBudgetInput();
-
-    updateMonthDisplay();
-
-    displayExpenses();
-
-    displayCategorySummary();
-
-    updateChart();
-
-}
-
-
-/* =========================================================
-   UPDATE BUDGET INPUT
-   ========================================================= */
-
-function updateBudgetInput() {
-
-    const input =
-        getElement(
-            "budget",
-            "monthlyBudget",
-            "budgetInput"
-        );
-
-
-    if (input) {
-
-        input.value =
-            appData.budget;
-
-    }
-
-}
-
-
-/* =========================================================
-   MONTH SELECTOR
-   ========================================================= */
-
-function updateMonthDisplay() {
-
-    const monthInput =
-        getElement(
-            "month",
-            "monthPicker",
-            "selectedMonth"
-        );
-
-
-    if (monthInput) {
-
-        monthInput.value =
-            selectedMonth;
-
-    }
-
-
-    const monthText =
-        getElement(
-            "monthTitle",
-            "currentMonth",
-            "selectedMonthText"
-        );
-
-
-    if (monthText) {
-
-        monthText.textContent =
-            formatMonth(selectedMonth);
-
-    }
-
-}
-
-
-/* =========================================================
-   CHANGE MONTH
-   ========================================================= */
-
-function changeMonth(value) {
-
-    if (!value) return;
-
-    selectedMonth = value;
-
-    updateDashboard();
-
-}
-
-
-/* =========================================================
-   EXPORT CSV
-   ========================================================= */
-
-function exportExpenses() {
-
-    const expenses =
-        getMonthExpenses();
-
-
-    if (expenses.length === 0) {
-
-        alert(
-            "No expenses to export for this month."
-        );
-
-        return;
-    }
-
-
-    let csv =
-        "Expense Name,Amount,Category,Date\n";
-
-
-    expenses.forEach(expense => {
-
-        csv +=
-            `"${escapeCSV(expense.name)}",` +
-            `"${expense.amount}",` +
-            `"${escapeCSV(expense.category)}",` +
-            `"${expense.date}"\n`;
-
-    });
-
-
-    const blob =
-        new Blob(
-            [csv],
-            {
-                type:
-                    "text/csv;charset=utf-8;"
-            }
-        );
-
-
-    const url =
-        URL.createObjectURL(blob);
-
-
-    const link =
-        document.createElement("a");
-
-
-    link.href = url;
-
-
-    link.download =
-        `Expenses-${selectedMonth}.csv`;
-
-
-    document.body.appendChild(link);
-
-    link.click();
-
-    document.body.removeChild(link);
-
-
-    URL.revokeObjectURL(url);
-
-}
-
-
-/* =========================================================
-   CSV ESCAPE
-   ========================================================= */
-
-function escapeCSV(value) {
-
-    return String(value)
-        .replace(/"/g, '""');
-
-}
-
-
-/* =========================================================
-   HTML ESCAPE
-   ========================================================= */
-
-function escapeHTML(value) {
-
-    const div =
-        document.createElement("div");
-
-
-    div.textContent =
-        String(value);
-
-
-    return div.innerHTML;
-
-}
-
-
-/* =========================================================
-   SEARCH
-   ========================================================= */
-
-function searchExpenses() {
-
-    const searchInput =
-        getElement(
-            "search",
-            "searchExpense"
-        );
-
-
-    const list =
-        getElement(
-            "expenseList",
-            "expensesList",
-            "expenseHistory"
-        );
-
-
-    if (!searchInput || !list) return;
-
-
-    const query =
-        searchInput.value
-            .toLowerCase()
-            .trim();
-
-
-    const results =
-        getMonthExpenses().filter(expense => {
-
-            return (
-
-                expense.name
-                    .toLowerCase()
-                    .includes(query)
-
-                ||
-
-                expense.category
-                    .toLowerCase()
-                    .includes(query)
-
-            );
-
-        });
-
-
-    list.innerHTML = "";
-
-
-    if (results.length === 0) {
-
-        list.innerHTML = `
-
-            <div class="empty-state">
-
-                <div class="empty-icon">
-                    🔍
-                </div>
-
-                <h3>
-                    No expenses found
-                </h3>
-
-                <p>
-                    Try another search.
-                </p>
-
-            </div>
-
-        `;
-
-        return;
-    }
-
-
-    results.forEach(expense => {
-
-        const item =
-            document.createElement("div");
-
-
-        item.className =
-            "expense-item";
-
-
-        item.innerHTML = `
-
-            <div class="expense-info">
-
-                <div class="expense-icon">
-                    ${getCategoryIcon(expense.category)}
-                </div>
-
-                <div>
-
-                    <h4>
-                        ${escapeHTML(expense.name)}
-                    </h4>
-
-                    <p>
-                        ${escapeHTML(expense.category)}
-                        •
-                        ${formatDate(expense.date)}
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="expense-right">
-
-                <strong>
-                    ${money(expense.amount)}
-                </strong>
-
-                <button
-                    class="delete-btn"
-                    onclick="deleteExpense(${expense.id})"
-                >
-                    🗑️
-                </button>
-
-            </div>
-
-        `;
-
-
-        list.appendChild(item);
-
-    });
-
-}
-
-
-/* =========================================================
-   DARK MODE
-   ========================================================= */
-
-function toggleDarkMode() {
-
-    document.body.classList.toggle(
-        "dark-mode"
-    );
-
-
-    const enabled =
-        document.body.classList.contains(
-            "dark-mode"
-        );
-
-
-    localStorage.setItem(
-        "expenseDarkMode",
-        enabled
-    );
-
-}
-
-
-/* =========================================================
-   LOAD DARK MODE
-   ========================================================= */
-
-function loadDarkMode() {
-
-    const enabled =
-        localStorage.getItem(
-            "expenseDarkMode"
-        );
-
-
-    if (enabled === "true") {
-
-        document.body.classList.add(
-            "dark-mode"
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   SMALL MESSAGE
-   ========================================================= */
-
-function showMessage(message) {
-
-    let toast =
-        document.getElementById(
-            "toastMessage"
-        );
-
-
-    if (!toast) {
-
-        toast =
-            document.createElement("div");
-
-
-        toast.id =
-            "toastMessage";
-
-
-        toast.style.position =
-            "fixed";
-
-
-        toast.style.bottom =
-            "25px";
-
-
-        toast.style.left =
-            "50%";
-
-
-        toast.style.transform =
-            "translateX(-50%)";
-
-
-        toast.style.padding =
-            "14px 22px";
-
-
-        toast.style.borderRadius =
-            "15px";
-
-
-        toast.style.background =
-            "linear-gradient(135deg,#7c3aed,#ec4899)";
-
-
-        toast.style.color =
-            "white";
-
-
-        toast.style.fontWeight =
-            "700";
-
-
-        toast.style.zIndex =
-            "9999";
-
-
-        toast.style.boxShadow =
-            "0 15px 40px rgba(0,0,0,.25)";
-
-
-        document.body.appendChild(toast);
-
-    }
-
-
-    toast.textContent =
-        message;
-
-
-    toast.style.display =
-        "block";
-
-
-    setTimeout(() => {
-
-        toast.style.display =
-            "none";
-
-    }, 2500);
-
-}
-
-
-/* =========================================================
-   EVENT LISTENERS
-   ========================================================= */
-
-document.addEventListener(
-    "DOMContentLoaded",
+   MONTH CHANGE
+========================================================= */
+
+monthSelect.addEventListener(
+    "change",
     function () {
-
-        loadDarkMode();
-
-
-        const form =
-            getElement(
-                "expenseForm"
-            );
-
-
-        if (form) {
-
-            form.addEventListener(
-                "submit",
-                addExpense
-            );
-
-        }
-
-
-        const monthInput =
-            getElement(
-                "month",
-                "monthPicker",
-                "selectedMonth"
-            );
-
-
-        if (monthInput) {
-
-            monthInput.addEventListener(
-                "change",
-                function () {
-
-                    changeMonth(
-                        this.value
-                    );
-
-                }
-            );
-
-        }
-
-
-        const searchInput =
-            getElement(
-                "search",
-                "searchExpense"
-            );
-
-
-        if (searchInput) {
-
-            searchInput.addEventListener(
-                "input",
-                searchExpenses
-            );
-
-        }
-
-
-        const budgetButton =
-            getElement(
-                "editBudget",
-                "budgetEdit",
-                "changeBudget"
-            );
-
-
-        if (budgetButton) {
-
-            budgetButton.addEventListener(
-                "click",
-                editBudget
-            );
-
-        }
-
-
-        const exportButton =
-            getElement(
-                "exportBtn",
-                "exportExpenses"
-            );
-
-
-        if (exportButton) {
-
-            exportButton.addEventListener(
-                "click",
-                exportExpenses
-            );
-
-        }
-
-
-        const clearButton =
-            getElement(
-                "clearBtn",
-                "clearExpenses"
-            );
-
-
-        if (clearButton) {
-
-            clearButton.addEventListener(
-                "click",
-                clearCurrentMonth
-            );
-
-        }
-
 
         updateDashboard();
 
@@ -1499,30 +1174,120 @@ document.addEventListener(
 
 
 /* =========================================================
-   GLOBAL FUNCTIONS
-   ========================================================= */
+   DARK MODE
+========================================================= */
 
-window.deleteExpense =
-    deleteExpense;
+function applyDarkMode() {
 
-window.editBudget =
-    editBudget;
+    if (appData.darkMode) {
 
-window.updateBudget =
-    updateBudget;
+        document.body.classList.add(
+            "dark-mode"
+        );
 
-window.changeMonth =
-    changeMonth;
+        themeBtn.textContent =
+            "☀️";
 
-window.toggleDarkMode =
-    toggleDarkMode;
+    } else {
 
-window.exportExpenses =
-    exportExpenses;
+        document.body.classList.remove(
+            "dark-mode"
+        );
 
-window.clearCurrentMonth =
-    clearCurrentMonth;
+        themeBtn.textContent =
+            "🌙";
 
-window.searchExpenses =
-    searchExpenses;
+    }
 
+}
+
+
+/* =========================================================
+   DARK MODE BUTTON
+========================================================= */
+
+themeBtn.addEventListener(
+    "click",
+    function () {
+
+        appData.darkMode =
+            !appData.darkMode;
+
+        saveData();
+
+        applyDarkMode();
+
+        updateChart();
+
+    }
+);
+
+
+/* =========================================================
+   CLEAR ALL DATA
+========================================================= */
+
+clearDataBtn.addEventListener(
+    "click",
+    function () {
+
+        const confirmation =
+            confirm(
+                "This will delete all budgets and expenses from this device. Continue?"
+            );
+
+
+        if (!confirmation) {
+
+            return;
+
+        }
+
+
+        appData = {
+
+            budgets: {},
+
+            expenses: {},
+
+            darkMode:
+                appData.darkMode
+
+        };
+
+
+        saveData();
+
+        updateDashboard();
+
+
+        alert(
+            "All expense data has been cleared."
+        );
+
+    }
+);
+
+
+/* =========================================================
+   INITIALIZE APP
+========================================================= */
+
+function initializeApp() {
+
+    ensureMonthExists(
+        getCurrentMonth()
+    );
+
+    applyDarkMode();
+
+    updateDashboard();
+
+}
+
+
+/* =========================================================
+   START
+========================================================= */
+
+initializeApp();
