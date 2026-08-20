@@ -4,283 +4,288 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Santhi Monthly Expenses</title>
+
   <link rel="stylesheet" href="style.css">
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
-  <div class="app">
+<div class="app">
 
-    <header class="hero">
+  <header class="hero">
+    <div>
+      <div class="tag">MONTHLY MONEY TRACKER</div>
+      <h1>Santhi's Expenses 💜</h1>
+      <p>Simple. Colorful. Easy to use.</p>
+    </div>
+
+    <button id="themeBtn" class="theme-btn">🌙</button>
+  </header>
+
+
+  <!-- MONTH + BUDGET -->
+
+  <section class="budget-card">
+
+    <div class="top-line">
       <div>
-        <span class="badge">✨ SIMPLE • SMART • MONTHLY</span>
-        <h1>Santhi's Expenses</h1>
-        <p>Track your monthly spending beautifully.</p>
+        <small>MONTHLY BUDGET</small>
+        <h2 id="selectedMonthTitle">August 2026</h2>
       </div>
 
-      <button id="themeBtn" class="icon-btn">🌙</button>
-    </header>
+      <select id="monthSelect"></select>
+    </div>
 
 
-    <!-- MONTH + BUDGET -->
-    <section class="top-grid">
+    <div class="budget-entry">
 
-      <div class="budget-card">
-        <div class="card-label">MONTHLY BUDGET</div>
+      <span>₹</span>
 
-        <div class="budget-input">
-          <span>₹</span>
-          <input
-            id="budgetInput"
-            type="number"
-            inputmode="decimal"
-            placeholder="Enter budget"
-          >
-        </div>
+      <input
+        id="budgetInput"
+        type="number"
+        inputmode="decimal"
+        placeholder="Enter budget"
+      >
 
-        <div class="month-row">
-          <span>Month</span>
+      <button id="budgetSaveBtn">OK ✓</button>
 
-          <select id="monthSelect">
-            <option value="0">January</option>
-            <option value="1">February</option>
-            <option value="2">March</option>
-            <option value="3">April</option>
-            <option value="4">May</option>
-            <option value="5">June</option>
-            <option value="6">July</option>
-            <option value="7">August</option>
-            <option value="8">September</option>
-            <option value="9">October</option>
-            <option value="10">November</option>
-            <option value="11">December</option>
-          </select>
-        </div>
+    </div>
 
-        <div class="budget-status">
-          <span id="budgetStatus">Budget not set</span>
-          <span id="budgetPercent">0%</span>
-        </div>
 
-        <div class="progress">
-          <div id="budgetProgress"></div>
-        </div>
+    <div class="budget-info">
+
+      <div>
+        <small>Budget</small>
+        <strong id="budgetText">₹0</strong>
       </div>
 
-
-      <!-- SUMMARY -->
-      <div class="summary-card">
-
-        <div class="summary-item purple">
-          <span class="summary-icon">💰</span>
-          <div>
-            <small>Total Spent</small>
-            <strong id="totalSpent">₹0</strong>
-          </div>
-        </div>
-
-        <div class="summary-item pink">
-          <span class="summary-icon">💳</span>
-          <div>
-            <small>Remaining</small>
-            <strong id="remaining">₹0</strong>
-          </div>
-        </div>
-
-        <div class="summary-item blue">
-          <span class="summary-icon">🧾</span>
-          <div>
-            <small>Expenses</small>
-            <strong id="expenseCount">0</strong>
-          </div>
-        </div>
-
+      <div>
+        <small>Spent</small>
+        <strong id="spentText">₹0</strong>
       </div>
 
-    </section>
-
-
-    <!-- ADD EXPENSE -->
-    <section class="expense-card">
-
-      <div class="section-title">
-        <div>
-          <span class="mini-label">QUICK ENTRY</span>
-          <h2>Add Expense</h2>
-        </div>
-
-        <span class="sparkle">✨</span>
+      <div>
+        <small>Remaining</small>
+        <strong id="remainingText">₹0</strong>
       </div>
 
-
-      <form id="expenseForm">
-
-        <div class="amount-box">
-          <span>₹</span>
-
-          <input
-            id="amountInput"
-            type="number"
-            inputmode="decimal"
-            min="1"
-            step="0.01"
-            placeholder="0"
-            required
-          >
-        </div>
+    </div>
 
 
-        <!-- CATEGORY BUTTONS -->
-        <div class="category-title">Choose category</div>
+    <div class="progress">
+      <div id="progressBar"></div>
+    </div>
 
-        <div class="categories">
+    <p id="budgetMessage">Set your monthly budget</p>
 
-          <button type="button" class="category active" data-category="Food">
-            🍲
-            <span>Food</span>
-          </button>
-
-          <button type="button" class="category" data-category="Groceries">
-            🛒
-            <span>Groceries</span>
-          </button>
-
-          <button type="button" class="category" data-category="Bills">
-            🧾
-            <span>Bills</span>
-          </button>
-
-          <button type="button" class="category" data-category="Transport">
-            🚗
-            <span>Travel</span>
-          </button>
-
-          <button type="button" class="category" data-category="Medical">
-            💊
-            <span>Medical</span>
-          </button>
-
-          <button type="button" class="category" data-category="Shopping">
-            🛍️
-            <span>Shopping</span>
-          </button>
-
-          <button type="button" class="category" data-category="Home">
-            🏠
-            <span>Home</span>
-          </button>
-
-          <button type="button" class="category" data-category="Other">
-            ✨
-            <span>Other</span>
-          </button>
-
-        </div>
+  </section>
 
 
-        <!-- OPTIONAL NOTE -->
-        <input
-          id="noteInput"
-          type="text"
-          maxlength="40"
-          placeholder="What did you spend on? (optional)"
-        >
+  <!-- ADD EXPENSE -->
 
+  <section class="card">
 
-        <button class="add-button" type="submit">
-          <span>＋</span>
-          Add Expense
-        </button>
-
-      </form>
-
-    </section>
-
-
-    <!-- ANALYTICS -->
-    <section class="analytics-grid">
-
-      <div class="chart-card">
-
-        <div class="section-title">
-          <div>
-            <span class="mini-label">OVERVIEW</span>
-            <h2>Where your money goes</h2>
-          </div>
-        </div>
-
-        <div class="chart-wrap">
-          <canvas id="expenseChart"></canvas>
-
-          <div id="chartEmpty">
-            <span>📊</span>
-            <p>Add expenses to see your chart</p>
-          </div>
-        </div>
-
+    <div class="section-heading">
+      <div>
+        <small>QUICK ADD</small>
+        <h2>Add Expense</h2>
       </div>
 
+      <span>✨</span>
+    </div>
 
-      <!-- CATEGORY TOTALS -->
-      <div class="category-card">
 
-        <div class="section-title">
-          <div>
-            <span class="mini-label">BREAKDOWN</span>
-            <h2>Categories</h2>
-          </div>
-        </div>
+    <div class="amount-entry">
 
-        <div id="categoryList">
-          <div class="empty-small">
-            No expenses yet
-          </div>
-        </div>
+      <span>₹</span>
 
+      <input
+        id="amountInput"
+        type="number"
+        inputmode="decimal"
+        min="1"
+        placeholder="Enter amount"
+      >
+
+      <button id="amountOkBtn">OK ✓</button>
+
+    </div>
+
+
+    <div class="category-title">
+      Select category
+    </div>
+
+
+    <div class="categories">
+
+      <button class="category active" data-category="Food">
+        <span>🍲</span>
+        Food
+      </button>
+
+      <button class="category" data-category="Groceries">
+        <span>🛒</span>
+        Groceries
+      </button>
+
+      <button class="category" data-category="Bills">
+        <span>🧾</span>
+        Bills
+      </button>
+
+      <button class="category" data-category="Travel">
+        <span>🚗</span>
+        Travel
+      </button>
+
+      <button class="category" data-category="Medical">
+        <span>💊</span>
+        Medical
+      </button>
+
+      <button class="category" data-category="Shopping">
+        <span>🛍️</span>
+        Shopping
+      </button>
+
+      <button class="category" data-category="Home">
+        <span>🏠</span>
+        Home
+      </button>
+
+      <button class="category" data-category="Other">
+        <span>✨</span>
+        Other
+      </button>
+
+    </div>
+
+
+    <div id="enteredDetails" class="entered-details">
+
+      <div class="detail-placeholder">
+        Enter an amount above
       </div>
 
-    </section>
+    </div>
 
 
-    <!-- EXPENSE HISTORY -->
-    <section class="history-card">
+    <div class="final-row">
 
-      <div class="history-header">
+      <input
+        id="noteInput"
+        type="text"
+        maxlength="50"
+        placeholder="Note (optional)"
+      >
 
-        <div>
-          <span class="mini-label">THIS MONTH</span>
-          <h2>Expense History</h2>
-        </div>
+      <button id="saveExpenseBtn" class="save-btn">
+        SAVE EXPENSE ✓
+      </button>
 
-        <button id="clearBtn" class="clear-button">
-          Clear All
-        </button>
+    </div>
 
+  </section>
+
+
+  <!-- DASHBOARD -->
+
+  <section class="dashboard">
+
+    <div class="stat-card purple">
+      <span>💰</span>
+      <small>Total Spent</small>
+      <strong id="totalSpent">₹0</strong>
+    </div>
+
+    <div class="stat-card pink">
+      <span>🧾</span>
+      <small>Transactions</small>
+      <strong id="transactionCount">0</strong>
+    </div>
+
+    <div class="stat-card blue">
+      <span>📊</span>
+      <small>Average</small>
+      <strong id="averageSpent">₹0</strong>
+    </div>
+
+  </section>
+
+
+  <!-- CHART -->
+
+  <section class="card chart-card">
+
+    <div class="section-heading">
+      <div>
+        <small>ANALYTICS</small>
+        <h2>Spending Overview</h2>
+      </div>
+    </div>
+
+    <div class="chart-box">
+      <canvas id="expenseChart"></canvas>
+
+      <div id="chartEmpty">
+        📊
+        <span>No expenses yet</span>
+      </div>
+    </div>
+
+  </section>
+
+
+  <!-- CATEGORY TOTALS -->
+
+  <section class="card">
+
+    <div class="section-heading">
+      <div>
+        <small>BREAKDOWN</small>
+        <h2>Category Spending</h2>
+      </div>
+    </div>
+
+    <div id="categoryTotals"></div>
+
+  </section>
+
+
+  <!-- HISTORY -->
+
+  <section class="card">
+
+    <div class="history-header">
+
+      <div>
+        <small>MONTHLY HISTORY</small>
+        <h2>Expenses</h2>
       </div>
 
+      <button id="clearBtn" class="clear-btn">
+        Clear Month
+      </button>
 
-      <div id="expenseList">
+    </div>
 
-        <div class="empty-history">
-          <div>🌱</div>
-          <h3>No expenses yet</h3>
-          <p>Add your first expense above.</p>
-        </div>
+    <div id="expenseList"></div>
 
-      </div>
-
-    </section>
+  </section>
 
 
-    <footer>
-      <span>Made with 💜 for easy monthly budgeting</span>
-    </footer>
+  <footer>
+    Made with 💜 • Santhi Monthly Expense Tracker
+  </footer>
 
-  </div>
+</div>
 
 
-  <script src="script.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
